@@ -47,7 +47,6 @@ static const int SMOOTH_MARGIN = 3;
 
 struct ImageScalerPrivate
 {
-    Qt::TransformationMode mTransformationMode;
     Document::Ptr mDocument;
     qreal mZoom;
     QRegion mRegion;
@@ -57,7 +56,6 @@ ImageScaler::ImageScaler(QObject* parent)
 : QObject(parent)
 , d(new ImageScalerPrivate)
 {
-    d->mTransformationMode = Qt::FastTransformation;
     d->mZoom = 0;
 }
 
@@ -83,11 +81,6 @@ void ImageScaler::setDocument(Document::Ptr document)
 void ImageScaler::setZoom(qreal zoom)
 {
     d->mZoom = zoom;
-}
-
-void ImageScaler::setTransformationMode(Qt::TransformationMode mode)
-{
-    d->mTransformationMode = mode;
 }
 
 void ImageScaler::setDestinationRegion(const QRegion& region)
@@ -158,28 +151,22 @@ void ImageScaler::scaleRect(const QRect& rect)
     }
 
     // Compute smooth margin
-    bool needsSmoothMargins = d->mTransformationMode == Qt::SmoothTransformation;
 
     int sourceLeftMargin, sourceRightMargin, sourceTopMargin, sourceBottomMargin;
     int destLeftMargin, destRightMargin, destTopMargin, destBottomMargin;
-    if (needsSmoothMargins) {
-        sourceLeftMargin = qMin(sourceRect.left(), SMOOTH_MARGIN);
-        sourceTopMargin = qMin(sourceRect.top(), SMOOTH_MARGIN);
-        sourceRightMargin = qMin(image.rect().right() - sourceRect.right(), SMOOTH_MARGIN);
-        sourceBottomMargin = qMin(image.rect().bottom() - sourceRect.bottom(), SMOOTH_MARGIN);
-        sourceRect.adjust(
-            -sourceLeftMargin,
-            -sourceTopMargin,
-            sourceRightMargin,
-            sourceBottomMargin);
-        destLeftMargin = int(sourceLeftMargin * zoom);
-        destTopMargin = int(sourceTopMargin * zoom);
-        destRightMargin = int(sourceRightMargin * zoom);
-        destBottomMargin = int(sourceBottomMargin * zoom);
-    } else {
-        sourceLeftMargin = sourceRightMargin = sourceTopMargin = sourceBottomMargin = 0;
-        destLeftMargin = destRightMargin = destTopMargin = destBottomMargin = 0;
-    }
+    sourceLeftMargin = qMin(sourceRect.left(), SMOOTH_MARGIN);
+    sourceTopMargin = qMin(sourceRect.top(), SMOOTH_MARGIN);
+    sourceRightMargin = qMin(image.rect().right() - sourceRect.right(), SMOOTH_MARGIN);
+    sourceBottomMargin = qMin(image.rect().bottom() - sourceRect.bottom(), SMOOTH_MARGIN);
+    sourceRect.adjust(
+        -sourceLeftMargin,
+        -sourceTopMargin,
+        sourceRightMargin,
+        sourceBottomMargin);
+    destLeftMargin = int(sourceLeftMargin * zoom);
+    destTopMargin = int(sourceTopMargin * zoom);
+    destRightMargin = int(sourceRightMargin * zoom);
+    destBottomMargin = int(sourceBottomMargin * zoom);
 
     // destRect is almost like rect, but it contains only "full" pixels
     QRectF destRectF = QRectF(
@@ -196,15 +183,13 @@ void ImageScaler::scaleRect(const QRect& rect)
               destRect.width(),
               destRect.height(),
               Qt::IgnoreAspectRatio, // Do not use KeepAspectRatio, it can lead to skipped rows or columns
-              d->mTransformationMode);
+              Qt::SmoothTransformation);
 
-    if (needsSmoothMargins) {
-        tmp = tmp.copy(
-                  destLeftMargin, destTopMargin,
-                  destRect.width() - (destLeftMargin + destRightMargin),
-                  destRect.height() - (destTopMargin + destBottomMargin)
-              );
-    }
+    tmp = tmp.copy(
+              destLeftMargin, destTopMargin,
+              destRect.width() - (destLeftMargin + destRightMargin),
+              destRect.height() - (destTopMargin + destBottomMargin)
+          );
 
     emit scaledRect(destRect.left() + destLeftMargin, destRect.top() + destTopMargin, tmp);
 }
