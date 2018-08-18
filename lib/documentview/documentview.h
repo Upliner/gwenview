@@ -81,8 +81,8 @@ public:
      * Create a new view attached to scene. We need the scene to be able to
      * install scene event filters.
      */
-    DocumentView(QGraphicsScene* scene);
-    ~DocumentView();
+    explicit DocumentView(QGraphicsScene* scene);
+    ~DocumentView() override;
 
     Document::Ptr document() const;
 
@@ -129,7 +129,7 @@ public:
     void fadeOut();
     void fakeFadeOut();
 
-    void setGeometry(const QRectF& rect) Q_DECL_OVERRIDE;
+    void setGeometry(const QRectF& rect) override;
 
     int sortKey() const;
     void setSortKey(int sortKey);
@@ -146,8 +146,10 @@ public Q_SLOTS:
     void setZoom(qreal);
 
     void setZoomToFit(bool);
+    void toggleZoomToFit();
 
     void setZoomToFill(bool);
+    void toggleZoomToFill();
 
     void setPosition(const QPoint&);
 
@@ -162,6 +164,10 @@ Q_SIGNALS:
     void previousImageRequested();
 
     void nextImageRequested();
+
+    void openUrlRequested(const QUrl&);
+
+    void openDirUrlRequested(const QUrl&);
 
     void captionUpdateRequested(const QString&);
 
@@ -195,12 +201,15 @@ Q_SIGNALS:
     void isAnimatedChanged();
 
 protected:
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = 0) Q_DECL_OVERRIDE;
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = nullptr) override;
 
-    void resizeEvent(QGraphicsSceneResizeEvent* event) Q_DECL_OVERRIDE;
-    void wheelEvent(QGraphicsSceneWheelEvent* event) Q_DECL_OVERRIDE;
-    void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) Q_DECL_OVERRIDE;
-    bool sceneEventFilter(QGraphicsItem*, QEvent*) Q_DECL_OVERRIDE;
+    void resizeEvent(QGraphicsSceneResizeEvent* event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+    void wheelEvent(QGraphicsSceneWheelEvent* event) override;
+    void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
+    bool sceneEventFilter(QGraphicsItem*, QEvent*) override;
+    void dragEnterEvent(QGraphicsSceneDragDropEvent* event) override;
+    void dropEvent(QGraphicsSceneDragDropEvent* event) override;
 
 private Q_SLOTS:
     void finishOpenUrl();
@@ -209,8 +218,8 @@ private Q_SLOTS:
 
     void zoomActualSize();
 
-    void zoomIn(const QPointF& center = QPointF(-1, -1));
-    void zoomOut(const QPointF& center = QPointF(-1, -1));
+    void zoomIn(QPointF center = QPointF(-1, -1));
+    void zoomOut(QPointF center = QPointF(-1, -1));
 
     void slotZoomChanged(qreal);
 
@@ -221,6 +230,9 @@ private Q_SLOTS:
     void emitFocused();
 
     void slotFadeInFinished();
+
+    void dragThumbnailLoaded(const KFileItem&, const QPixmap&);
+    void dragThumbnailLoadingFailed(const KFileItem&);
 
 private:
     friend struct DocumentViewPrivate;

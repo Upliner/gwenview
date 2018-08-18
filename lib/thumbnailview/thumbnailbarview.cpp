@@ -82,7 +82,7 @@ struct ThumbnailBarItemDelegatePrivate
     void setupToggleSelectionButton()
     {
         mToggleSelectionButton = new QToolButton(mView->viewport());
-        mToggleSelectionButton->setIcon(QIcon::fromTheme("list-add"));
+        mToggleSelectionButton->setIcon(QIcon::fromTheme(QStringLiteral("list-add")));
         mToggleSelectionButton->hide();
         QObject::connect(mToggleSelectionButton, &QToolButton::clicked, q, &ThumbnailBarItemDelegate::toggleSelection);
     }
@@ -141,7 +141,7 @@ struct ThumbnailBarItemDelegatePrivate
     void updateToggleSelectionButton()
     {
         bool isSelected = mView->selectionModel()->isSelected(mIndexUnderCursor);
-        mToggleSelectionButton->setIcon(QIcon::fromTheme(isSelected ? "list-remove" : "list-add"));
+        mToggleSelectionButton->setIcon(QIcon::fromTheme(isSelected ? QStringLiteral("list-remove") : QStringLiteral("list-add")));
     }
 };
 
@@ -162,6 +162,10 @@ ThumbnailBarItemDelegate::ThumbnailBarItemDelegate(ThumbnailView* view)
     view->viewport()->setAttribute(Qt::WA_Hover);
 
     d->mBorderColor = PaintUtils::alphaAdjustedF(QColor(Qt::white), 0.65);
+
+    connect(view, &ThumbnailView::selectionChangedSignal, [this]() {
+        d->updateToggleSelectionButton();
+    });
 }
 
 QSize ThumbnailBarItemDelegate::sizeHint(const QStyleOptionViewItem & /*option*/, const QModelIndex & index) const
@@ -243,7 +247,6 @@ void ThumbnailBarItemDelegate::paint(QPainter * painter, const QStyleOptionViewI
 void ThumbnailBarItemDelegate::toggleSelection()
 {
     d->mView->selectionModel()->select(d->mIndexUnderCursor, QItemSelectionModel::Toggle);
-    d->updateToggleSelectionButton();
 }
 
 ThumbnailBarItemDelegate::~ThumbnailBarItemDelegate()
@@ -510,7 +513,7 @@ void ThumbnailBarView::resizeEvent(QResizeEvent *event)
 
 void ThumbnailBarView::selectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
 {
-    QListView::selectionChanged(selected, deselected);
+    ThumbnailView::selectionChanged(selected, deselected);
 
     QModelIndexList oldList = deselected.indexes();
     QModelIndexList newList = selected.indexes();

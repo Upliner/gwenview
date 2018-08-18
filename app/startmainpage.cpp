@@ -63,15 +63,15 @@ public:
         : AbstractThumbnailViewHelper(parent)
     {}
 
-    void showContextMenu(QWidget*) Q_DECL_OVERRIDE
+    void showContextMenu(QWidget*) override
     {
     }
 
-    void showMenuForUrlDroppedOnViewport(QWidget*, const QList<QUrl>&) Q_DECL_OVERRIDE
+    void showMenuForUrlDroppedOnViewport(QWidget*, const QList<QUrl>&) override
     {
     }
 
-    void showMenuForUrlDroppedOnDir(QWidget*, const QList<QUrl>&, const QUrl&) Q_DECL_OVERRIDE
+    void showMenuForUrlDroppedOnDir(QWidget*, const QList<QUrl>&, const QUrl&) override
     {
     }
 };
@@ -143,7 +143,7 @@ StartMainPage::StartMainPage(QWidget* parent, GvCore* gvCore)
 : QFrame(parent)
 , d(new StartMainPagePrivate)
 {
-    d->mRecentFilesThumbnailProvider = 0;
+    d->mRecentFilesThumbnailProvider = nullptr;
     d->q = this;
     d->mGvCore = gvCore;
     d->mSearchUiInitialized = false;

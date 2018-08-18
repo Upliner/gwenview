@@ -60,13 +60,13 @@ struct HistoryItem : public QStandardItem
     {
         if (!QDir().mkpath(storageDir)) {
             qCritical() << "Could not create history dir" << storageDir;
-            return 0;
+            return nullptr;
         }
         QTemporaryFile file(storageDir + QStringLiteral("/gvhistoryXXXXXXrc"));
         file.setAutoRemove(false);
         if (!file.open()) {
             qCritical() << "Could not create history file";
-            return 0;
+            return nullptr;
         }
 
         HistoryItem* item = new HistoryItem(url, dateTime, file.fileName());
@@ -82,12 +82,12 @@ struct HistoryItem : public QStandardItem
         QUrl url(group.readEntry("url"));
         if (!url.isValid()) {
             qCritical() << "Invalid url" << url;
-            return 0;
+            return nullptr;
         }
         QDateTime dateTime = QDateTime::fromString(group.readEntry("dateTime"), Qt::ISODate);
         if (!dateTime.isValid()) {
             qCritical() << "Invalid dateTime" << dateTime;
-            return 0;
+            return nullptr;
         }
 
         return new HistoryItem(url, dateTime, fileName);
@@ -130,7 +130,7 @@ private:
 #ifdef Q_OS_UNIX
         // shorten home directory, but avoid showing a cryptic "~/"
         if (text.length() > QDir::homePath().length() + 1) {
-            text.replace(QRegularExpression('^' + QDir::homePath()), "~");
+            text.replace(QRegularExpression('^' + QDir::homePath()), QStringLiteral("~"));
         }
 #endif
         setText(text);
@@ -148,7 +148,7 @@ private:
         setData(i18n("Last visited: %1", date), Qt::ToolTipRole);
     }
 
-    bool operator<(const QStandardItem& other) const Q_DECL_OVERRIDE {
+    bool operator<(const QStandardItem& other) const override {
         return mDateTime > static_cast<const HistoryItem*>(&other)->mDateTime;
     }
 };
@@ -167,7 +167,7 @@ struct HistoryModelPrivate
         if (!dir.exists()) {
             return;
         }
-        Q_FOREACH(const QString & name, dir.entryList(QStringList() << "*rc")) {
+        Q_FOREACH(const QString & name, dir.entryList(QStringList() << QStringLiteral("*rc"))) {
             HistoryItem* item = HistoryItem::load(dir.filePath(name));
             if (!item) {
                 continue;

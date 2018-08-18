@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 #include "viewmainpage.h"
+#include "config-gwenview.h"
 
 // Qt
 #include <QCheckBox>
@@ -35,8 +36,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <KMessageBox>
 #include <KModelIndexProxyMapper>
 #include <KToggleAction>
-#include <KActivities/ResourceInstance>
 #include <KSqueezedTextLabel>
+#ifdef KF5Activities_FOUND
+#include <KActivities/ResourceInstance>
+#endif
 
 // Local
 #include "fileoperations.h"
@@ -132,7 +135,9 @@ struct ViewMainPagePrivate
     // Activity Resource events reporting needs to be above KPart,
     // in the shell itself, to avoid problems with other MDI applications
     // that use this KPart
+#ifdef KF5Activities_FOUND
     QHash<DocumentView*, KActivities::ResourceInstance*> mActivityResources;
+#endif
 
     bool mCompareMode;
     ZoomMode::Enum mZoomMode;
@@ -239,6 +244,8 @@ struct ViewMainPagePrivate
         QObject::connect(view, &DocumentView::completed, q, &ViewMainPage::completed);
         QObject::connect(view, &DocumentView::previousImageRequested, q, &ViewMainPage::previousImageRequested);
         QObject::connect(view, &DocumentView::nextImageRequested, q, &ViewMainPage::nextImageRequested);
+        QObject::connect(view, &DocumentView::openUrlRequested, q, &ViewMainPage::openUrlRequested);
+        QObject::connect(view, &DocumentView::openDirUrlRequested, q, &ViewMainPage::openDirUrlRequested);
         QObject::connect(view, &DocumentView::captionUpdateRequested, q, &ViewMainPage::captionUpdateRequested);
         QObject::connect(view, &DocumentView::toggleFullScreenRequested, q, &ViewMainPage::toggleFullScreenRequested);
         QObject::connect(view, &DocumentView::focused, q, &ViewMainPage::slotViewFocused);
@@ -248,7 +255,9 @@ struct ViewMainPagePrivate
         QObject::connect(view, &DocumentView::videoFinished, mSlideShow, &SlideShow::resumeAndGoToNextUrl);
 
         mDocumentViews << view;
+#ifdef KF5Activities_FOUND
         mActivityResources.insert(view, new KActivities::ResourceInstance(q->window()->winId(), view));
+#endif
 
         return view;
     }
@@ -256,18 +265,20 @@ struct ViewMainPagePrivate
     void deleteDocumentView(DocumentView* view)
     {
         if (mDocumentViewController->view() == view) {
-            mDocumentViewController->setView(0);
+            mDocumentViewController->setView(nullptr);
         }
 
         // Make sure we do not get notified about this view while it is going away.
         // mDocumentViewController->deleteView() animates the view deletion so
         // the view still exists for a short while when we come back to the
         // event loop)
-        QObject::disconnect(view, 0, q, 0);
-        QObject::disconnect(view, 0, mSlideShow, 0);
+        QObject::disconnect(view, nullptr, q, nullptr);
+        QObject::disconnect(view, nullptr, mSlideShow, nullptr);
 
         mDocumentViews.removeOne(view);
+#ifdef KF5Activities_FOUND
         mActivityResources.remove(view);
+#endif
         mDocumentViewContainer->deleteView(view);
     }
 
@@ -342,8 +353,10 @@ struct ViewMainPagePrivate
         }
         if (oldView) {
             oldView->setCurrent(false);
+#ifdef KF5Activities_FOUND
             Q_ASSERT(mActivityResources.contains(oldView));
             mActivityResources.value(oldView)->notifyFocusedOut();
+#endif
         }
         view->setCurrent(true);
         mDocumentViewController->setView(view);
@@ -356,10 +369,10 @@ struct ViewMainPagePrivate
             // *before* listing /foo (because it matters less to the user)
             mThumbnailBar->selectionModel()->setCurrentIndex(index, QItemSelectionModel::Current);
         }
-
+#ifdef KF5Activities_FOUND
         Q_ASSERT(mActivityResources.contains(view));
         mActivityResources.value(view)->notifyFocusedIn();
-
+#endif
         QObject::connect(view, &DocumentView::currentToolChanged,
                          q, &ViewMainPage::updateFocus);
     }
@@ -404,7 +417,7 @@ ViewMainPage::ViewMainPage(QWidget* parent, SlideShow* slideShow, KActionCollect
 , d(new ViewMainPagePrivate)
 {
     d->q = this;
-    d->mDirModelToBarModelProxyMapper = 0; // Initialized later
+    d->mDirModelToBarModelProxyMapper = nullptr; // Initialized later
     d->mSlideShow = slideShow;
     d->mActionCollection = actionCollection;
     d->mGvCore = gvCore;
@@ -426,7 +439,7 @@ ViewMainPage::ViewMainPage(QWidget* parent, SlideShow* slideShow, KActionCollect
 
     KActionCategory* view = new KActionCategory(i18nc("@title actions category - means actions changing smth in interface", "View"), actionCollection);
 
-    d->mToggleThumbnailBarAction = view->add<KToggleAction>(QString("toggle_thumbnailbar"));
+    d->mToggleThumbnailBarAction = view->add<KToggleAction>(QStringLiteral("toggle_thumbnailbar"));
     d->mToggleThumbnailBarAction->setText(i18n("Thumbnail Bar"));
     d->mToggleThumbnailBarAction->setIcon(QIcon::fromTheme("folder-image"));
     actionCollection->setDefaultShortcut(d->mToggleThumbnailBarAction, Qt::CTRL + Qt::Key_B);
@@ -621,7 +634,7 @@ bool ViewMainPage::isEmpty() const
 RasterImageView* ViewMainPage::imageView() const
 {
     if (!d->currentView()) {
-        return 0;
+        return nullptr;
     }
     return d->currentView()->imageView();
 }
@@ -699,7 +712,9 @@ void ViewMainPage::openUrls(const QList<QUrl>& allUrls, const QUrl &currentUrl)
         DocumentView* view = it.value();
         DocumentView::Setup savedSetup = d->mDocumentViewContainer->savedSetup(url);
         view->openUrl(url, d->mZoomMode == ZoomMode::Individual && savedSetup.valid ? savedSetup : setup);
+#ifdef KF5Activities_FOUND
         d->mActivityResources.value(view)->setUri(url);
+#endif
     }
 
     // Init views
@@ -753,7 +768,7 @@ void ViewMainPage::reload()
 
 void ViewMainPage::reset()
 {
-    d->mDocumentViewController->setView(0);
+    d->mDocumentViewController->reset();
     d->mDocumentViewContainer->reset();
     d->mDocumentViews.clear();
 }
@@ -810,7 +825,7 @@ void ViewMainPage::trashView(DocumentView* view)
 
 void ViewMainPage::deselectView(DocumentView* view)
 {
-    DocumentView* newCurrentView = 0;
+    DocumentView* newCurrentView = nullptr;
     if (view == d->currentView()) {
         // We need to find a new view to set as current
         int idx = d->mDocumentViews.indexOf(view);

@@ -36,11 +36,11 @@ class ItemEditor : public KLineEdit
 {
     Q_OBJECT
 public:
-    ItemEditor(QWidget* parent = 0);
-    ~ItemEditor();
+    explicit ItemEditor(QWidget* parent = nullptr);
+    ~ItemEditor() override;
 
 protected:
-    virtual void showEvent(QShowEvent*) Q_DECL_OVERRIDE;
+    void showEvent(QShowEvent*) override;
 
 private Q_SLOTS:
     void resizeToContents();

@@ -49,7 +49,7 @@ public:
         : mRectF(rectF)
     {}
 
-    void threadedStart() Q_DECL_OVERRIDE
+    void threadedStart() override
     {
         if (!checkDocumentEditor()) {
             return;
@@ -74,7 +74,7 @@ RedEyeReductionImageOperation::RedEyeReductionImageOperation(const QRectF& rectF
 : d(new RedEyeReductionImageOperationPrivate)
 {
     d->mRectF = rectF;
-    setText(i18n("RedEyeReduction"));
+    setText(i18n("Reduce Red Eye"));
 }
 
 RedEyeReductionImageOperation::~RedEyeReductionImageOperation()
@@ -104,7 +104,7 @@ void RedEyeReductionImageOperation::undo()
         painter.drawImage(rect.topLeft(), d->mOriginalImage);
     }
     document()->editor()->setImage(img);
-    finishUndoJob();
+    finish(true);
 }
 
 /**

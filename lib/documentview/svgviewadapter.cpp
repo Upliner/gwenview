@@ -211,9 +211,9 @@ void SvgViewAdapter::setZoomToFit(bool on)
     d->mView->setZoomToFit(on);
 }
 
-void SvgViewAdapter::setZoomToFill(bool on)
+void SvgViewAdapter::setZoomToFill(bool on, const QPointF& center)
 {
-    d->mView->setZoomToFill(on);
+    d->mView->setZoomToFill(on, center);
 }
 
 bool SvgViewAdapter::zoomToFit() const
@@ -259,6 +259,11 @@ void SvgViewAdapter::setScrollPos(const QPointF& pos)
 QRectF SvgViewAdapter::visibleDocumentRect() const
 {
     return QRectF(d->mView->imageOffset(), d->mView->visibleImageSize());
+}
+
+AbstractImageView* SvgViewAdapter::imageView() const
+{
+    return d->mView;
 }
 
 } // namespace

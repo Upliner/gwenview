@@ -49,7 +49,7 @@ public:
         : mSize(size)
     {}
 
-    void threadedStart() Q_DECL_OVERRIDE
+    void threadedStart() override
     {
         if (!checkDocumentEditor()) {
             return;
@@ -89,7 +89,7 @@ void ResizeImageOperation::undo()
         return;
     }
     document()->editor()->setImage(d->mOriginalImage);
-    finishUndoJob();
+    finish(true);
 }
 
 } // namespace

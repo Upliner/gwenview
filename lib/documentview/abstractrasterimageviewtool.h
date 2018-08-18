@@ -60,10 +60,10 @@ public:
     {}
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent*)
     {}
+    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event);
     virtual void hoverMoveEvent(QGraphicsSceneHoverEvent*)
     {}
-    virtual void wheelEvent(QGraphicsSceneWheelEvent*)
-    {}
+    virtual void wheelEvent(QGraphicsSceneWheelEvent* event);
     virtual void keyPressEvent(QKeyEvent*)
     {}
     virtual void keyReleaseEvent(QKeyEvent*)
@@ -76,7 +76,7 @@ public:
 
     virtual QWidget* widget() const
     {
-        return 0;
+        return nullptr;
     }
 
 public Q_SLOTS:

@@ -39,7 +39,7 @@ class QRectF;
 namespace Gwenview
 {
 
-class ImageView;
+class AbstractImageView;
 class RasterImageView;
 
 /**
@@ -60,14 +60,14 @@ public:
 
     virtual MimeTypeUtils::Kind kind() const = 0;
 
-    virtual ImageView* imageView() const
+    virtual AbstractImageView* imageView() const
     {
-        return 0;
+        return nullptr;
     }
 
     virtual RasterImageView* rasterImageView() const
     {
-        return 0;
+        return nullptr;
     }
 
     virtual QCursor cursor() const;
@@ -93,7 +93,7 @@ public:
     }
 
     // Implementation must emit zoomToFillChanged()
-    virtual void setZoomToFill(bool)
+    virtual void setZoomToFill(bool /*on*/, const QPointF& /*center*/ = QPointF(-1, -1))
     {}
 
     virtual bool zoomToFill() const
@@ -186,15 +186,15 @@ class EmptyAdapter : public AbstractDocumentViewAdapter
     Q_OBJECT
 public:
     EmptyAdapter();
-    virtual MimeTypeUtils::Kind kind() const Q_DECL_OVERRIDE
+    MimeTypeUtils::Kind kind() const override
     {
         return MimeTypeUtils::KIND_UNKNOWN;
     }
-    virtual Document::Ptr document() const Q_DECL_OVERRIDE
+    Document::Ptr document() const override
     {
         return Document::Ptr();
     }
-    virtual void setDocument(Document::Ptr) Q_DECL_OVERRIDE
+    void setDocument(Document::Ptr) override
     {}
 };
 

@@ -47,13 +47,13 @@ namespace Gwenview
 class SideBarButton : public QToolButton
 {
 protected:
-    void paintEvent(QPaintEvent* event) Q_DECL_OVERRIDE
+    void paintEvent(QPaintEvent* event) override
     {
         forceIcon();
         QToolButton::paintEvent(event);
     }
 
-    QSize sizeHint() const Q_DECL_OVERRIDE
+    QSize sizeHint() const override
     {
         const_cast<SideBarButton*>(this)->forceIcon();
         return QToolButton::sizeHint();
@@ -92,7 +92,7 @@ SideBarGroup::SideBarGroup(const QString& title, bool defaultContainerMarginEnab
 : QFrame()
 , d(new SideBarGroupPrivate)
 {
-    d->mContainer = 0;
+    d->mContainer = nullptr;
     d->mTitleLabel = new QLabel(this);
     d->mDefaultContainerMarginEnabled = defaultContainerMarginEnabled;
     d->mTitleLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);

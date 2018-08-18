@@ -108,6 +108,7 @@ struct CropToolPrivate
         } else {
             top = rect.top() + (rect.height() - HANDLE_SIZE) / 2;
             top = qBound(0, top, viewportSize.height() - HANDLE_SIZE);
+            top = qBound(rect.top() + HANDLE_SIZE, top, rect.bottom() - 2 * HANDLE_SIZE);
         }
 
         if (handle & CH_Left) {
@@ -117,6 +118,7 @@ struct CropToolPrivate
         } else {
             left = rect.left() + (rect.width() - HANDLE_SIZE) / 2;
             left = qBound(0, left, viewportSize.width() - HANDLE_SIZE);
+            left = qBound(rect.left() + HANDLE_SIZE, left, rect.right() - 2 * HANDLE_SIZE);
         }
 
         return QRect(left, top, HANDLE_SIZE, HANDLE_SIZE);
@@ -197,7 +199,7 @@ struct CropToolPrivate
     void setupWidget()
     {
         RasterImageView* view = q->imageView();
-        mCropWidget = new CropWidget(0, view, q);
+        mCropWidget = new CropWidget(nullptr, view, q);
         QObject::connect(mCropWidget, SIGNAL(cropRequested()),
                          q, SLOT(slotCropRequested()));
         QObject::connect(mCropWidget, SIGNAL(done()),
@@ -290,11 +292,19 @@ void CropTool::paint(QPainter* painter)
 
 void CropTool::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
-    event->accept();
     if (event->buttons() != Qt::LeftButton) {
+        event->ignore();
         return;
     }
-    d->mMovingHandle = d->handleAt(event->pos());
+    const CropHandle newMovingHandle = d->handleAt(event->pos());
+    if (event->modifiers() & Qt::ControlModifier
+        && !(newMovingHandle & (CH_Top | CH_Left | CH_Right | CH_Bottom))) {
+        event->ignore();
+        return;
+    }
+
+    event->accept();
+    d->mMovingHandle = newMovingHandle;
     d->updateCursor(d->mMovingHandle, true /* down */);
 
     if (d->mMovingHandle == CH_Content) {
@@ -392,6 +402,16 @@ void CropTool::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
     imageView()->update();
 }
 
+void CropTool::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event)
+{
+    if (event->buttons() != Qt::LeftButton || d->handleAt(event->pos()) == CH_None) {
+        event->ignore();
+        return;
+    }
+    event->accept();
+    d->mCropWidget->findChild<QDialogButtonBox *>()->accepted();
+}
+
 void CropTool::hoverMoveEvent(QGraphicsSceneHoverEvent* event)
 {
     event->accept();
@@ -425,7 +445,6 @@ void CropTool::keyPressEvent(QKeyEvent* event)
 
 void CropTool::toolActivated()
 {
-    imageView()->setCursor(Qt::CrossCursor);
     d->mCropWidget->setAdvancedSettingsEnabled(GwenviewConfig::cropAdvancedSettingsEnabled());
     d->mCropWidget->setPreserveAspectRatio(GwenviewConfig::cropPreserveAspectRatio());
     const int index = GwenviewConfig::cropRatioIndex();

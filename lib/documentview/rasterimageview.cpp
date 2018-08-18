@@ -74,7 +74,7 @@ struct RasterImageViewPrivate
         if (mDisplayTransform) {
             cmsDeleteTransform(mDisplayTransform);
         }
-        mDisplayTransform = 0;
+        mDisplayTransform = nullptr;
 
         Cms::Profile::Ptr profile = q->document()->cmsProfile();
         if (!profile) {
@@ -94,11 +94,9 @@ struct RasterImageViewPrivate
         case QImage::Format_ARGB32:
             cmsFormat = TYPE_BGRA_8;
             break;
-#if QT_VERSION >= QT_VERSION_CHECK(5, 5, 0)
         case QImage::Format_Grayscale8:
             cmsFormat = TYPE_GRAY_8;
             break;
-#endif
         default:
             qWarning() << "Gwenview can only apply color profile on RGB32 or ARGB32 images";
             return;
@@ -195,7 +193,7 @@ RasterImageView::RasterImageView(QGraphicsItem* parent)
     d->q = this;
     d->mEmittedCompleted = false;
     d->mApplyDisplayTransform = true;
-    d->mDisplayTransform = 0;
+    d->mDisplayTransform = nullptr;
 
     d->mAlphaBackgroundMode = AlphaBackgroundNone;
     d->mAlphaBackgroundColor = Qt::black;
@@ -295,7 +293,9 @@ void RasterImageView::finishSetDocument()
     } else if (zoomToFill()) {
         setZoom(computeZoomToFill(), QPointF(-1, -1), ForceUpdate);
     } else {
-        updateBuffer();
+        // Not only call updateBuffer, but also ensure the initial transformation mode
+        // of the image scaler is set correctly when zoom is unchanged (see Bug 396736).
+        onZoomChanged();
     }
 
     d->startAnimationIfNecessary();
@@ -365,6 +365,7 @@ void RasterImageView::updateFromScaler(int zoomedImageLeft, int zoomedImageTop, 
 
 void RasterImageView::onZoomChanged()
 {
+    d->mScaler->setZoom(zoom());
     if (!d->mUpdateTimer->isActive()) {
         updateBuffer();
     }
@@ -435,17 +436,13 @@ void RasterImageView::resizeEvent(QGraphicsSceneResizeEvent* event)
     // mUpdateTimer must be started before calling AbstractImageView::resizeEvent()
     // because AbstractImageView::resizeEvent() will call onZoomChanged(), which
     // will trigger an immediate update unless the mUpdateTimer is active.
-    if (zoomToFit() && !d->mBufferIsEmpty) {
-        d->mUpdateTimer->start();
-    } else if (zoomToFill() && !d->mBufferIsEmpty) {
+    if ((zoomToFit() || zoomToFill()) && !d->mBufferIsEmpty) {
         d->mUpdateTimer->start();
     }
     AbstractImageView::resizeEvent(event);
-    if (!zoomToFit()) {
+    if (!zoomToFit() || !zoomToFill()) {
         // Only update buffer if we are not in zoomToFit mode: if we are
         // onZoomChanged() will have already updated the buffer.
-        updateBuffer();
-    } else if (!zoomToFill()) {
         updateBuffer();
     }
 }
@@ -453,7 +450,6 @@ void RasterImageView::resizeEvent(QGraphicsSceneResizeEvent* event)
 void RasterImageView::updateBuffer(const QRegion& region)
 {
     d->mUpdateTimer->stop();
-    d->mScaler->setZoom(zoom());
     if (region.isEmpty()) {
         d->setScalerRegionToVisibleRect();
     } else {
@@ -467,11 +463,15 @@ void RasterImageView::setCurrentTool(AbstractRasterImageViewTool* tool)
         d->mTool.data()->toolDeactivated();
         d->mTool.data()->deleteLater();
     }
+
+    // Go back to default cursor when tool is deactivated. We need to call this here and
+    // not further below in case toolActivated wants to set its own new cursor afterwards.
+    updateCursor();
+
     d->mTool = tool;
     if (d->mTool) {
         d->mTool.data()->toolActivated();
     }
-    updateCursor();
     currentToolChanged(tool);
     update();
 }
@@ -490,6 +490,17 @@ void RasterImageView::mousePressEvent(QGraphicsSceneMouseEvent* event)
         }
     }
     AbstractImageView::mousePressEvent(event);
+}
+
+void RasterImageView::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event)
+{
+    if (d->mTool) {
+        d->mTool.data()->mouseDoubleClickEvent(event);
+        if (event->isAccepted()) {
+            return;
+        }
+    }
+    AbstractImageView::mouseDoubleClickEvent(event);
 }
 
 void RasterImageView::mouseMoveEvent(QGraphicsSceneMouseEvent* event)

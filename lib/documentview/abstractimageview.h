@@ -51,7 +51,7 @@ public:
     };
 
     AbstractImageView(QGraphicsItem* parent);
-    ~AbstractImageView();
+    ~AbstractImageView() override;
 
     qreal zoom() const;
 
@@ -63,7 +63,7 @@ public:
 
     virtual void setZoomToFit(bool value);
 
-    virtual void setZoomToFill(bool value);
+    virtual void setZoomToFill(bool value, const QPointF& center = QPointF(-1, -1));
 
     virtual void setDocument(Document::Ptr doc);
 
@@ -105,6 +105,8 @@ public:
 
     void applyPendingScrollPos();
 
+    void resetDragCursor();
+
 public Q_SLOTS:
     void updateCursor();
 
@@ -138,14 +140,15 @@ protected:
      */
     virtual void onScrollPosChanged(const QPointF& oldPos) = 0;
 
-    void resizeEvent(QGraphicsSceneResizeEvent* event) Q_DECL_OVERRIDE;
+    void resizeEvent(QGraphicsSceneResizeEvent* event) override;
+    void focusInEvent(QFocusEvent* event) override;
 
-    void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
-    void keyReleaseEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QGraphicsSceneMouseEvent* event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) Q_DECL_OVERRIDE;
-    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent* event) override;
+    void keyReleaseEvent(QKeyEvent* event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
 
 private:
     friend struct AbstractImageViewPrivate;

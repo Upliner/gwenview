@@ -45,7 +45,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Cambridge, MA 02110-1301, USA
 #include <kipi/imageinfoshared.h>
 #include <kipi/plugin.h>
 #include <kipi/pluginloader.h>
-//#include <kipi/version.h>
 
 // local
 #include "mainwindow.h"
@@ -344,10 +343,11 @@ void KIPIInterface::loadOnePlugin()
         if (KIO::DesktopExecParser::hasSchemeHandler(QUrl(KIPI_PLUGINS_URL))) {
             d->mPluginMenu->addAction(d->mInstallPluginAction);
             d->mInstallPluginAction->setEnabled(true);
-            QObject::connect(d->mInstallPluginAction, &QAction::triggered,
-                            this, [=](){QDesktopServices::openUrl(QUrl(KIPI_PLUGINS_URL));});
-            d->mPluginWatcher.addPaths(QCoreApplication::libraryPaths());
-            connect(&d->mPluginWatcher, &QFileSystemWatcher::directoryChanged, this, &KIPIInterface::packageFinished);
+            QObject::connect(d->mInstallPluginAction, &QAction::triggered, this, [&](){
+                QDesktopServices::openUrl(QUrl(KIPI_PLUGINS_URL));
+                d->mPluginWatcher.addPaths(QCoreApplication::libraryPaths());
+                connect(&d->mPluginWatcher, &QFileSystemWatcher::directoryChanged, this, &KIPIInterface::packageFinished);
+            });
         } else {
             d->mPluginMenu->addAction(d->mNoPluginAction);
         }
@@ -373,7 +373,11 @@ QList<QAction*> KIPIInterface::pluginActions(KIPI::Category category) const
     if (isLoadingFinished()) {
         QList<QAction*> list = d->mMenuInfoMap.value(category).mActions;
         if (list.isEmpty()) {
-            list << d->mNoPluginAction;
+            if (KIO::DesktopExecParser::hasSchemeHandler(QUrl(KIPI_PLUGINS_URL))) {
+                list << d->mInstallPluginAction;
+            } else {
+                list << d->mNoPluginAction;
+            }
         }
         return list;
     } else {

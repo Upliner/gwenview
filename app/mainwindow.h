@@ -41,7 +41,7 @@ class MainWindow : public KXmlGuiWindow
     Q_OBJECT
 public:
     MainWindow();
-    ~MainWindow();
+    ~MainWindow() override;
     /**
      * Defines the url to display when the window is shown for the first time.
      */
@@ -67,18 +67,18 @@ Q_SIGNALS:
     void viewModeChanged();
 
 public Q_SLOTS:
-    virtual void setCaption(const QString&) Q_DECL_OVERRIDE;
+    void setCaption(const QString&) override;
 
-    virtual void setCaption(const QString&, bool modified) Q_DECL_OVERRIDE;
+    void setCaption(const QString&, bool modified) override;
 
 protected:
-    virtual bool queryClose() Q_DECL_OVERRIDE;
-    virtual QSize sizeHint() const Q_DECL_OVERRIDE;
-    virtual void showEvent(QShowEvent*) Q_DECL_OVERRIDE;
-    virtual void resizeEvent(QResizeEvent*) Q_DECL_OVERRIDE;
-    virtual void saveProperties(KConfigGroup&) Q_DECL_OVERRIDE;
-    virtual void readProperties(const KConfigGroup&) Q_DECL_OVERRIDE;
-    bool eventFilter(QObject *, QEvent *) Q_DECL_OVERRIDE;
+    bool queryClose() override;
+    QSize sizeHint() const override;
+    void showEvent(QShowEvent*) override;
+    void resizeEvent(QResizeEvent*) override;
+    void saveProperties(KConfigGroup&) override;
+    void readProperties(const KConfigGroup&) override;
+    bool eventFilter(QObject *, QEvent *) override;
 
 private Q_SLOTS:
     void setActiveViewModeAction(QAction* action);

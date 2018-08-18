@@ -47,12 +47,12 @@ namespace Gwenview
 class UrlDropTreeView : public QTreeView
 {
 public:
-    UrlDropTreeView(QWidget* parent = 0)
+    explicit UrlDropTreeView(QWidget* parent = nullptr)
         : QTreeView(parent)
         {}
 
 protected:
-    void dragEnterEvent(QDragEnterEvent* event) Q_DECL_OVERRIDE
+    void dragEnterEvent(QDragEnterEvent* event) override
     {
         QAbstractItemView::dragEnterEvent(event);
         setDirtyRegion(mDropRect);
@@ -61,7 +61,7 @@ protected:
         }
     }
 
-    void dragMoveEvent(QDragMoveEvent* event) Q_DECL_OVERRIDE
+    void dragMoveEvent(QDragMoveEvent* event) override
     {
         QAbstractItemView::dragMoveEvent(event);
 
@@ -80,7 +80,7 @@ protected:
         }
     }
 
-    void dropEvent(QDropEvent* event) Q_DECL_OVERRIDE
+    void dropEvent(QDropEvent* event) override
     {
         const QList<QUrl> urlList = KUrlMimeData::urlsFromMimeData(event->mimeData());
         const QModelIndex index = indexAt(event->pos());
@@ -100,7 +100,7 @@ private:
 FolderViewContextManagerItem::FolderViewContextManagerItem(ContextManager* manager)
 : AbstractContextManagerItem(manager)
 {
-    mModel = 0;
+    mModel = nullptr;
 
     setupView();
 

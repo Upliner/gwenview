@@ -112,8 +112,9 @@ struct ImageOpsContextManagerItem::Private
         actionCollection->setDefaultShortcut(mCropAction, Qt::SHIFT + Qt::Key_C);
 
         mRedEyeReductionAction = edit->addAction("red_eye_reduction", q, SLOT(startRedEyeReduction()));
-        mRedEyeReductionAction->setText(i18n("Red Eye Reduction"));
+        mRedEyeReductionAction->setText(i18n("Reduce Red Eye"));
         mRedEyeReductionAction->setIcon(QIcon::fromTheme("redeyes"));
+        actionCollection->setDefaultShortcut(mRedEyeReductionAction, Qt::SHIFT + Qt::Key_E);
 
         mActionList
                 << mRotateLeftAction
@@ -130,7 +131,6 @@ struct ImageOpsContextManagerItem::Private
     {
         QUrl url = q->contextManager()->currentUrl();
         Document::Ptr doc = DocumentFactory::instance()->load(url);
-        doc->startLoadingFullImage();
         doc->waitUntilLoaded();
         if (doc->isEditable()) {
             return true;
@@ -300,7 +300,7 @@ void ImageOpsContextManagerItem::restoreDefaultImageViewTool()
     }
 
     AbstractRasterImageViewTool* tool = imageView->currentTool();
-    imageView->setCurrentTool(0);
+    imageView->setCurrentTool(nullptr);
     tool->deleteLater();
     d->mMainWindow->setDistractionFreeMode(false);
 }

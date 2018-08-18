@@ -46,8 +46,8 @@ class GWENVIEWLIB_EXPORT DocumentViewContainer : public QGraphicsView
 {
     Q_OBJECT
 public:
-    DocumentViewContainer(QWidget* parent = 0);
-    ~DocumentViewContainer();
+    explicit DocumentViewContainer(QWidget* parent = nullptr);
+    ~DocumentViewContainer() override;
 
     /**
      * Create a DocumentView in the DocumentViewContainer scene
@@ -86,8 +86,8 @@ public Q_SLOTS:
     void updateLayout();
 
 protected:
-    void showEvent(QShowEvent*) Q_DECL_OVERRIDE;
-    void resizeEvent(QResizeEvent*) Q_DECL_OVERRIDE;
+    void showEvent(QShowEvent*) override;
+    void resizeEvent(QResizeEvent*) override;
 
 private:
     friend class ViewItem;

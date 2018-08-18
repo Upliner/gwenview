@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Cambridge, MA 02110-1301, USA
 #include <QToolButton>
 #include <QWidgetAction>
 #include <QTimer>
+#include <QDebug>
 
 // KDE
 #include <KActionCollection>
@@ -62,7 +63,7 @@ namespace Gwenview
 class FullScreenToolBar : public QWidget
 {
 public:
-    FullScreenToolBar(QWidget* parent = 0)
+    explicit FullScreenToolBar(QWidget* parent = nullptr)
     : QWidget(parent)
     , mLayout(new QHBoxLayout(this))
     {
@@ -286,7 +287,7 @@ void FullScreenContent::updateMetaInfoDialog()
     if (!mImageMetaInfoDialog) {
         return;
     }
-    ImageMetaInfoModel* model = mCurrentDocument ? mCurrentDocument->metaInfo() : 0;
+    ImageMetaInfoModel* model = mCurrentDocument ? mCurrentDocument->metaInfo() : nullptr;
     mImageMetaInfoDialog->setMetaInfo(model, GwenviewConfig::fullScreenPreferredMetaInfoKeyList());
 }
 

@@ -67,13 +67,13 @@ public:
         : AbstractThumbnailViewHelper(parent)
     {}
 
-    void showContextMenu(QWidget*) Q_DECL_OVERRIDE
+    void showContextMenu(QWidget*) override
     {}
 
-    void showMenuForUrlDroppedOnViewport(QWidget*, const QList<QUrl>&) Q_DECL_OVERRIDE
+    void showMenuForUrlDroppedOnViewport(QWidget*, const QList<QUrl>&) override
     {}
 
-    void showMenuForUrlDroppedOnDir(QWidget*, const QList<QUrl>&, const QUrl&) Q_DECL_OVERRIDE
+    void showMenuForUrlDroppedOnDir(QWidget*, const QList<QUrl>&, const QUrl&) override
     {}
 };
 
@@ -141,7 +141,7 @@ struct ThumbnailPagePrivate : public Ui_ThumbnailPage
 
     void setupSrcUrlWidgets()
     {
-        mSrcUrlModelProxyMapper = 0;
+        mSrcUrlModelProxyMapper = nullptr;
         QObject::connect(mSrcUrlButton, SIGNAL(clicked()), q, SLOT(setupSrcUrlTreeView()));
         QObject::connect(mSrcUrlButton, SIGNAL(clicked()), q, SLOT(toggleSrcUrlTreeView()));
         mSrcUrlTreeView->hide();
@@ -377,8 +377,8 @@ public:
     , mName(name)
     {}
 
-    bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const // reimp
-    Q_DECL_OVERRIDE {
+    bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const override
+    {
         if (sourceParent.isValid()) {
             return true;
         }
@@ -387,8 +387,8 @@ public:
         return item.url().matches(mUrl, QUrl::StripTrailingSlash);
     }
 
-    QVariant data(const QModelIndex& index, int role) const // reimp
-    Q_DECL_OVERRIDE {
+    QVariant data(const QModelIndex& index, int role) const override
+    {
         if (index.parent().isValid()) {
             return QSortFilterProxyModel::data(index, role);
         }

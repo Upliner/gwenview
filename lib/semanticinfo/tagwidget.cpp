@@ -49,7 +49,7 @@ class TagCompleterModel : public QSortFilterProxyModel
 public:
     TagCompleterModel(QObject* parent)
         : QSortFilterProxyModel(parent)
-        {
+    {
     }
 
     void setTagInfo(const TagInfo& tagInfo)
@@ -72,7 +72,7 @@ public:
     }
 
 protected:
-    bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const Q_DECL_OVERRIDE
+    bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const override
     {
         QModelIndex sourceIndex = sourceModel()->index(sourceRow, 0, sourceParent);
         SemanticInfoTag tag = sourceIndex.data(TagModel::TagRole).toString();
@@ -92,12 +92,12 @@ private:
 class ReturnKeyEater : public QObject
 {
 public:
-    ReturnKeyEater(QObject* parent = 0)
+    explicit ReturnKeyEater(QObject* parent = nullptr)
         : QObject(parent)
     {}
 
 protected:
-    bool eventFilter(QObject*, QEvent* event) Q_DECL_OVERRIDE
+    bool eventFilter(QObject*, QEvent* event) override
     {
         if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease) {
             QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
@@ -193,7 +193,7 @@ TagWidget::TagWidget(QWidget* parent)
 , d(new TagWidgetPrivate)
 {
     d->q = this;
-    d->mBackEnd = 0;
+    d->mBackEnd = nullptr;
     d->mAssignedTagModel = new TagModel(this);
     d->setupWidgets();
     installEventFilter(new ReturnKeyEater(this));

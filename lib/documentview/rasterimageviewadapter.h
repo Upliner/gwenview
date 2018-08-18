@@ -39,50 +39,51 @@ class GWENVIEWLIB_EXPORT RasterImageViewAdapter : public AbstractDocumentViewAda
     Q_OBJECT
 public:
     RasterImageViewAdapter();
-    ~RasterImageViewAdapter();
+    ~RasterImageViewAdapter() override;
 
-    virtual QCursor cursor() const Q_DECL_OVERRIDE;
+    QCursor cursor() const override;
 
-    virtual void setCursor(const QCursor&) Q_DECL_OVERRIDE;
+    void setCursor(const QCursor&) override;
 
-    virtual MimeTypeUtils::Kind kind() const Q_DECL_OVERRIDE
+    MimeTypeUtils::Kind kind() const override
     {
         return MimeTypeUtils::KIND_RASTER_IMAGE;
     }
 
-    virtual bool canZoom() const Q_DECL_OVERRIDE
+    bool canZoom() const override
     {
         return true;
     }
 
-    virtual void setZoomToFit(bool) Q_DECL_OVERRIDE;
+    void setZoomToFit(bool) override;
 
-    virtual void setZoomToFill(bool) Q_DECL_OVERRIDE;
+    void setZoomToFill(bool on, const QPointF& center) override;
 
-    virtual bool zoomToFit() const Q_DECL_OVERRIDE;
+    bool zoomToFit() const override;
 
-    virtual bool zoomToFill() const Q_DECL_OVERRIDE;
+    bool zoomToFill() const override;
 
-    virtual qreal zoom() const Q_DECL_OVERRIDE;
+    qreal zoom() const override;
 
-    virtual void setZoom(qreal zoom, const QPointF& center) Q_DECL_OVERRIDE;
+    void setZoom(qreal zoom, const QPointF& center) override;
 
-    virtual qreal computeZoomToFit() const Q_DECL_OVERRIDE;
+    qreal computeZoomToFit() const override;
 
-    virtual qreal computeZoomToFill() const Q_DECL_OVERRIDE;
+    qreal computeZoomToFill() const override;
 
-    virtual Document::Ptr document() const Q_DECL_OVERRIDE;
+    Document::Ptr document() const override;
 
-    virtual void setDocument(Document::Ptr) Q_DECL_OVERRIDE;
+    void setDocument(Document::Ptr) override;
 
-    virtual void loadConfig() Q_DECL_OVERRIDE;
+    void loadConfig() override;
 
-    virtual RasterImageView* rasterImageView() const Q_DECL_OVERRIDE;
+    RasterImageView* rasterImageView() const override;
+    virtual AbstractImageView* imageView() const override;
 
-    virtual QPointF scrollPos() const Q_DECL_OVERRIDE;
-    virtual void setScrollPos(const QPointF& pos) Q_DECL_OVERRIDE;
+    QPointF scrollPos() const override;
+    void setScrollPos(const QPointF& pos) override;
 
-    virtual QRectF visibleDocumentRect() const Q_DECL_OVERRIDE;
+    QRectF visibleDocumentRect() const override;
 
 private Q_SLOTS:
     void slotLoadingFailed();

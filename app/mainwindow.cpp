@@ -322,6 +322,10 @@ struct MainWindow::Private
                 q, SLOT(goToPrevious()));
         connect(mViewMainPage, SIGNAL(nextImageRequested()),
                 q, SLOT(goToNext()));
+        connect(mViewMainPage, &ViewMainPage::openUrlRequested,
+                q, &MainWindow::openUrl);
+        connect(mViewMainPage, &ViewMainPage::openDirUrlRequested,
+                q, &MainWindow::openDirUrl);
 
         setupThumbnailBar(mViewMainPage->thumbnailBar());
     }
@@ -456,6 +460,7 @@ struct MainWindow::Private
         action->setIcon(QIcon::fromTheme("go-home"));
         action->setText(i18nc("@action", "Start Page"));
         action->setToolTip(i18nc("@info:tooltip", "Open the start page"));
+        actionCollection->setDefaultShortcuts(action, KStandardShortcut::home());
 
         mToggleSideBarAction = view->add<KToggleAction>("toggle_sidebar");
         connect(mToggleSideBarAction, &KToggleAction::triggered, q, &MainWindow::toggleSideBar);
@@ -532,7 +537,7 @@ struct MainWindow::Private
         InfoContextManagerItem* infoItem = new InfoContextManagerItem(mContextManager);
 
 #ifndef GWENVIEW_SEMANTICINFO_BACKEND_NONE
-        SemanticInfoContextManagerItem* semanticInfoItem = 0;
+        SemanticInfoContextManagerItem* semanticInfoItem = nullptr;
         semanticInfoItem = new SemanticInfoContextManagerItem(mContextManager, actionCollection, mViewMainPage);
 #endif
 
@@ -704,14 +709,11 @@ struct MainWindow::Private
             break;
         case BrowseMainPageId:
             return GwenviewConfig::sideBarVisibleBrowseMode();
-            break;
         case ViewMainPageId:
             return q->isFullScreen()
                 ? GwenviewConfig::sideBarVisibleViewModeFullScreen()
                 : GwenviewConfig::sideBarVisibleViewMode();
-            break;
         }
-
         return false;
     }
 
@@ -740,14 +742,11 @@ struct MainWindow::Private
             break;
         case BrowseMainPageId:
             return GwenviewConfig::statusBarVisibleBrowseMode();
-            break;
         case ViewMainPageId:
             return q->isFullScreen()
                 ? GwenviewConfig::statusBarVisibleViewModeFullScreen()
                 : GwenviewConfig::statusBarVisibleViewMode();
-            break;
         }
-
         return false;
     }
 
@@ -790,7 +789,7 @@ struct MainWindow::Private
         if (!enabled) {
             mNotificationRestrictions = new KNotificationRestrictions(KNotificationRestrictions::ScreenSaver, q);
         } else {
-            mNotificationRestrictions = 0;
+            mNotificationRestrictions = nullptr;
         }
     }
 
@@ -798,7 +797,7 @@ struct MainWindow::Private
     {
         GV_RETURN_IF_FAIL(thumbnailView);
         if (mActiveThumbnailView) {
-            mActiveThumbnailView->setThumbnailProvider(0);
+            mActiveThumbnailView->setThumbnailProvider(nullptr);
         }
         thumbnailView->setThumbnailProvider(mThumbnailProvider);
         mActiveThumbnailView = thumbnailView;
@@ -835,21 +834,15 @@ MainWindow::MainWindow()
     d->setupThumbnailBarModel();
     d->mGvCore = new GvCore(this, d->mDirModel);
     d->mPreloader = new Preloader(this);
-    d->mNotificationRestrictions = 0;
+    d->mNotificationRestrictions = nullptr;
     d->mThumbnailProvider = new ThumbnailProvider();
-    d->mActiveThumbnailView = 0;
+    d->mActiveThumbnailView = nullptr;
     d->initDirModel();
     d->setupWidgets();
     d->setupActions();
     d->setupUndoActions();
     d->setupContextManagerItems();
     d->setupFullScreenContent();
-
-#ifdef HAVE_QTDBUS
-    d->mMpris2Service = new Mpris2Service(d->mSlideShow, d->mContextManager,
-                                          d->mToggleSlideShowAction, d->mFullScreenAction,
-                                          d->mGoToPreviousAction, d->mGoToNextAction, this);
-#endif
 
     d->updateActions();
     updatePreviousNextActions();
@@ -860,6 +853,12 @@ MainWindow::MainWindow()
 
     connect(DocumentFactory::instance(), SIGNAL(modifiedDocumentListChanged()),
             SLOT(slotModifiedDocumentListChanged()));
+
+#ifdef HAVE_QTDBUS
+    d->mMpris2Service = new Mpris2Service(d->mSlideShow, d->mContextManager,
+                                          d->mToggleSlideShowAction, d->mFullScreenAction,
+                                          d->mGoToPreviousAction, d->mGoToNextAction, this);
+#endif
 
 #ifdef KIPI_FOUND
     d->mKIPIInterface = new KIPIInterface(this);
@@ -1235,6 +1234,7 @@ void MainWindow::slotDirListerCompleted()
     } else {
         d->goToFirstDocument();
 
+        // Try to select the first directory in case there are no images to select
         if (!d->mContextManager->selectionModel()->hasSelection()) {
             const QModelIndex index = d->mThumbnailView->model()->index(0, 0);
             if (index.isValid()) {
@@ -1274,7 +1274,6 @@ void MainWindow::goToUrl(const QUrl &url)
     }
     QUrl dirUrl = url;
     dirUrl = dirUrl.adjusted(QUrl::RemoveFilename);
-    dirUrl.setPath(dirUrl.path() + "");
     if (dirUrl != d->mContextManager->currentDirUrl()) {
         d->mContextManager->setCurrentDirUrl(dirUrl);
         d->mGvCore->addUrlToRecentFolders(dirUrl);
@@ -1389,7 +1388,7 @@ void MainWindow::openFile()
     QUrl dirUrl = d->mContextManager->currentDirUrl();
 
     DialogGuard<QFileDialog> dialog(this);
-    dialog->selectUrl(dirUrl);
+    dialog->setDirectoryUrl(dirUrl);
     dialog->setWindowTitle(i18nc("@title:window", "Open Image"));
     const QStringList mimeFilter = MimeTypeUtils::imageMimeTypes();
     dialog->setMimeTypeFilters(mimeFilter);

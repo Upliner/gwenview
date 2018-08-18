@@ -37,6 +37,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #else
 #include "abstractsemanticinfobackend.h"
 #include "semanticinfodirmodel.h"
+#include <lib/sorting.h>
 #endif
 
 namespace Gwenview
@@ -200,7 +201,7 @@ bool SortedDirModel::filterAcceptsRow(int row, const QModelIndex& parent) const
     }
 
     if (kind != MimeTypeUtils::KIND_DIR && kind != MimeTypeUtils::KIND_ARCHIVE) {
-        int dotPos = fileItem.name().lastIndexOf('.');
+        int dotPos = fileItem.name().lastIndexOf(QLatin1Char('.'));
         if (dotPos >= 1) {
             QString extension = fileItem.name().mid(dotPos + 1).toLower();
             if (d->mBlackListedExtensions.contains(extension)) {
@@ -265,17 +266,33 @@ bool SortedDirModel::lessThan(const QModelIndex& left, const QModelIndex& right)
     const bool rightIsDirOrArchive = ArchiveUtils::fileItemIsDirOrArchive(rightItem);
 
     if (leftIsDirOrArchive != rightIsDirOrArchive) {
-        return leftIsDirOrArchive;
+        return sortOrder() == Qt::AscendingOrder ? leftIsDirOrArchive : rightIsDirOrArchive;
     }
 
-    if (sortColumn() != KDirModel::ModifiedTime) {
-        return KDirSortFilterProxyModel::lessThan(left, right);
+    // Apply special sort handling only to images. For folders/archives or when
+    // a secondary criterion is needed, delegate sorting to the parent class.
+    if (!leftIsDirOrArchive) {
+        if (sortColumn() == KDirModel::ModifiedTime) {
+            const QDateTime leftDate = TimeUtils::dateTimeForFileItem(leftItem);
+            const QDateTime rightDate = TimeUtils::dateTimeForFileItem(rightItem);
+
+            if (leftDate != rightDate) {
+                return leftDate < rightDate;
+            }
+        }
+#ifndef GWENVIEW_SEMANTICINFO_BACKEND_NONE
+        if (sortRole() == SemanticInfoDirModel::RatingRole) {
+            const int leftRating = d->mSourceModel->data(left, SemanticInfoDirModel::RatingRole).toInt();
+            const int rightRating = d->mSourceModel->data(right, SemanticInfoDirModel::RatingRole).toInt();
+
+            if (leftRating != rightRating) {
+                return leftRating < rightRating;
+            }
+        }
+#endif
     }
 
-    const QDateTime leftDate = TimeUtils::dateTimeForFileItem(leftItem);
-    const QDateTime rightDate = TimeUtils::dateTimeForFileItem(rightItem);
-
-    return leftDate < rightDate;
+    return KDirSortFilterProxyModel::lessThan(left, right);
 }
 
 bool SortedDirModel::hasDocuments() const

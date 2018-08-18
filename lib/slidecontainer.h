@@ -42,7 +42,7 @@ class GWENVIEWLIB_EXPORT SlideContainer : public QFrame
     Q_OBJECT
     Q_PROPERTY(int slideHeight READ slideHeight WRITE setSlideHeight)
 public:
-    SlideContainer(QWidget* parent = 0);
+    explicit SlideContainer(QWidget* parent = nullptr);
 
     /**
      * Returns the content widget
@@ -54,9 +54,9 @@ public:
      */
     void setContent(QWidget* content);
 
-    virtual QSize sizeHint() const Q_DECL_OVERRIDE;
+    QSize sizeHint() const override;
 
-    virtual QSize minimumSizeHint() const Q_DECL_OVERRIDE;
+    QSize minimumSizeHint() const override;
 
     int slideHeight() const;
 
@@ -80,8 +80,8 @@ Q_SIGNALS:
     void slidedOut();
 
 protected:
-    void resizeEvent(QResizeEvent*) Q_DECL_OVERRIDE;
-    bool eventFilter(QObject*, QEvent* event) Q_DECL_OVERRIDE;
+    void resizeEvent(QResizeEvent*) override;
+    bool eventFilter(QObject*, QEvent* event) override;
 
 private Q_SLOTS:
     void slotAnimFinished();

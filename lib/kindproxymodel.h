@@ -41,14 +41,14 @@ class GWENVIEWLIB_EXPORT KindProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 public:
-    KindProxyModel(QObject* parent = 0);
-    ~KindProxyModel();
+    explicit KindProxyModel(QObject* parent = nullptr);
+    ~KindProxyModel() override;
 
     void setKindFilter(MimeTypeUtils::Kinds);
     MimeTypeUtils::Kinds kindFilter() const;
 
 protected:
-    bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const Q_DECL_OVERRIDE;
+    bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const override;
 
 private:
     KindProxyModelPrivate* const d;

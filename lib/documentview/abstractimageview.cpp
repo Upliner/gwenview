@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Cambridge, MA 02110-1301, USA
 
 // Qt
 #include <QDebug>
+#include <QGuiApplication>
 #include <QCursor>
 #include <QGraphicsSceneMouseEvent>
 #include <QStandardPaths>
@@ -124,6 +125,17 @@ struct AbstractImageViewPrivate
         painter.fillRect(16, 16, 16, 16, light);
         return pix;
     }
+
+    void checkAndRequestZoomAction(const QGraphicsSceneMouseEvent* event)
+    {
+        if (event->modifiers() & Qt::ControlModifier) {
+            if (event->button() == Qt::LeftButton) {
+                q->zoomInRequested(event->pos());
+            } else if (event->button() == Qt::RightButton) {
+                q->zoomOutRequested(event->pos());
+            }
+        }
+    }
 };
 
 AbstractImageView::AbstractImageView(QGraphicsItem* parent)
@@ -162,7 +174,7 @@ Document::Ptr AbstractImageView::document() const
 void AbstractImageView::setDocument(Document::Ptr doc)
 {
     if (d->mDocument) {
-        disconnect(d->mDocument.data(), 0, this, 0);
+        disconnect(d->mDocument.data(), nullptr, this, nullptr);
     }
     d->mDocument = doc;
     loadFromDocument();
@@ -256,6 +268,7 @@ void AbstractImageView::setZoomToFit(bool on)
 {
     d->mZoomToFit = on;
     if (on) {
+        d->mZoomToFill = false;
         setZoom(computeZoomToFit());
     }
     // We do not set zoom to 1 if zoomToFit is off, this is up to the code
@@ -264,11 +277,12 @@ void AbstractImageView::setZoomToFit(bool on)
     zoomToFitChanged(d->mZoomToFit);
 }
 
-void AbstractImageView::setZoomToFill(bool on)
+void AbstractImageView::setZoomToFill(bool on, const QPointF& center)
 {
     d->mZoomToFill = on;
     if (on) {
-        setZoom(computeZoomToFill());
+        d->mZoomToFit = false;
+        setZoom(computeZoomToFill(), center);
     }
     // We do not set zoom to 1 if zoomToFit is off, this is up to the code
     // calling us. It may went to zoom to some other level and/or to zoom on
@@ -307,6 +321,18 @@ void AbstractImageView::resizeEvent(QGraphicsSceneResizeEvent* event)
     }
 }
 
+void AbstractImageView::focusInEvent(QFocusEvent* event)
+{
+    QGraphicsWidget::focusInEvent(event);
+
+    // We might have missed a keyReleaseEvent for the control key, e.g. for Ctrl+O
+    const bool controlKeyIsCurrentlyDown = QGuiApplication::queryKeyboardModifiers() & Qt::ControlModifier;
+    if (d->mControlKeyIsDown != controlKeyIsCurrentlyDown) {
+        d->mControlKeyIsDown = controlKeyIsCurrentlyDown;
+        updateCursor();
+    }
+}
+
 qreal AbstractImageView::computeZoomToFit() const
 {
     QSizeF docSize = documentSize();
@@ -342,27 +368,14 @@ qreal AbstractImageView::computeZoomToFill() const
 void AbstractImageView::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
     QGraphicsItem::mousePressEvent(event);
-    if (event->button() == Qt::MiddleButton) {
-        bool value = !zoomToFit();
-        setZoomToFit(value);
-        if (!value) {
-            setZoom(1., event->pos());
-        }
-        return;
-    }
 
-    if (event->modifiers() & Qt::ControlModifier) {
-        if (event->button() == Qt::LeftButton) {
-            zoomInRequested(event->pos());
-            return;
-        } else if (event->button() == Qt::RightButton) {
-            zoomOutRequested(event->pos());
-            return;
-        }
-    }
+    d->checkAndRequestZoomAction(event);
 
-    d->mLastDragPos = event->pos();
-    updateCursor();
+    // Prepare for panning or dragging
+    if (event->button() == Qt::LeftButton) {
+        d->mLastDragPos = event->pos();
+        updateCursor();
+    }
 }
 
 void AbstractImageView::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
@@ -488,9 +501,11 @@ void AbstractImageView::keyReleaseEvent(QKeyEvent* event)
 
 void AbstractImageView::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event)
 {
-    if (event->modifiers() == Qt::NoModifier) {
+    if (event->modifiers() == Qt::NoModifier && event->button() == Qt::LeftButton) {
         toggleFullScreenRequested();
     }
+
+    d->checkAndRequestZoomAction(event);
 }
 
 QPointF AbstractImageView::imageOffset() const
@@ -594,6 +609,12 @@ void AbstractImageView::applyPendingScrollPos()
 {
     d->adjustImageOffset();
     d->adjustScrollPos();
+}
+
+void AbstractImageView::resetDragCursor()
+{
+    d->mLastDragPos = QPointF();
+    updateCursor();
 }
 
 } // namespace

@@ -31,7 +31,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Cambridge, MA 02110-1301, USA
 // Local
 #include <lib/thumbnailgroup.h>
 
-class QModelIndex;
 class QPixmap;
 class QSize;
 
@@ -44,7 +43,7 @@ class GWENVIEWLIB_EXPORT AbstractDocumentInfoProvider : public QObject
 {
     Q_OBJECT
 public:
-    AbstractDocumentInfoProvider(QObject* parent = 0);
+    explicit AbstractDocumentInfoProvider(QObject* parent = nullptr);
 
     /**
      * Returns true if the document is currently busy (loading, saving,

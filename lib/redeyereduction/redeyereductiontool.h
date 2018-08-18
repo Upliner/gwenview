@@ -46,19 +46,22 @@ public:
         Adjusting
     };
 
-    RedEyeReductionTool(RasterImageView* parent);
-    ~RedEyeReductionTool();
+    explicit RedEyeReductionTool(RasterImageView* parent);
+    ~RedEyeReductionTool() override;
 
-    virtual void paint(QPainter*) Q_DECL_OVERRIDE;
+    void paint(QPainter*) override;
 
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
-    virtual void keyPressEvent(QKeyEvent*) Q_DECL_OVERRIDE;
+    void mousePressEvent(QGraphicsSceneMouseEvent*) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent*) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent*) override;
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
+    void keyPressEvent(QKeyEvent*) override;
 
-    virtual void toolActivated() Q_DECL_OVERRIDE;
+    void toolActivated() override;
 
-    QWidget* widget() const Q_DECL_OVERRIDE;
+    void slotApplyClicked();
+
+    QWidget* widget() const override;
 
 Q_SIGNALS:
     void done();
@@ -66,7 +69,6 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void setDiameter(int);
-    void slotApplyClicked();
 
 private:
     RedEyeReductionToolPrivate* const d;

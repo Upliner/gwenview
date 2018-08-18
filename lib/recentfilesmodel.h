@@ -45,12 +45,12 @@ class GWENVIEWLIB_EXPORT RecentFilesModel : public QStandardItemModel
 {
     Q_OBJECT
 public:
-    RecentFilesModel(QObject* parent);
-    ~RecentFilesModel();
+    explicit RecentFilesModel(QObject* parent);
+    ~RecentFilesModel() override;
 
     void addUrl(const QUrl&);
 
-    virtual bool removeRows(int row, int count, const QModelIndex& parent = QModelIndex()) Q_DECL_OVERRIDE;
+    bool removeRows(int row, int count, const QModelIndex& parent = QModelIndex()) override;
 
 private:
     RecentFilesModelPrivate* const d;

@@ -195,7 +195,7 @@ struct PreviewItemDelegatePrivate
         mIndexUnderCursor = index;
         mView->update(oldIndex);
 
-        if (QApplication::style()->styleHint(QStyle::SH_ItemView_ActivateItemOnSingleClick, 0, mView)) {
+        if (QApplication::style()->styleHint(QStyle::SH_ItemView_ActivateItemOnSingleClick, nullptr, mView)) {
             mView->setCursor(mIndexUnderCursor.isValid() ? Qt::PointingHandCursor : Qt::ArrowCursor);
         }
 
@@ -413,7 +413,7 @@ struct PreviewItemDelegatePrivate
             QSize fullSize;
             QPixmap thumbnailPix = mView->thumbnailForIndex(index, &fullSize);
             if (fullSize.isValid()) {
-                const QString text = QString("%1x%2").arg(fullSize.width()).arg(fullSize.height());
+                const QString text = QStringLiteral("%1x%2").arg(fullSize.width()).arg(fullSize.height());
                 elided |= isTextElided(text);
                 textList << text;
             }
@@ -437,7 +437,7 @@ struct PreviewItemDelegatePrivate
         if (!mToolTip) {
             initToolTip();
         }
-        mToolTip->setText(textList.join("\n"));
+        mToolTip->setText(textList.join(QLatin1Char('\n')));
         QSize tipSize = mToolTip->sizeHint();
 
         // Compute tip position
@@ -501,8 +501,9 @@ struct PreviewItemDelegatePrivate
     {
 #ifndef GWENVIEW_SEMANTICINFO_BACKEND_NONE
         return qMax(mView->fontMetrics().ascent(), int(KIconLoader::SizeSmall));
-#endif
+#else
         return 0;
+#endif
     }
 
     int itemHeight() const
@@ -541,7 +542,7 @@ struct PreviewItemDelegatePrivate
     void updateToggleSelectionButton()
     {
         mToggleSelectionButton->setIcon(QIcon::fromTheme(
-                                            mView->selectionModel()->isSelected(mIndexUnderCursor) ? "list-remove" : "list-add"
+                                            mView->selectionModel()->isSelected(mIndexUnderCursor) ? QStringLiteral("list-remove") : QStringLiteral("list-add")
                                         ));
     }
 
@@ -599,6 +600,9 @@ PreviewItemDelegate::PreviewItemDelegate(ThumbnailView* view)
             SLOT(slotRowsChanged()));
     connect(view, SIGNAL(rowsInsertedSignal(QModelIndex,int,int)),
             SLOT(slotRowsChanged()));
+    connect(view, &ThumbnailView::selectionChangedSignal, [this]() {
+        d->updateToggleSelectionButton();
+    });
 
 #ifndef GWENVIEW_SEMANTICINFO_BACKEND_NONE
     d->mRatingPainter.setAlignment(Qt::AlignHCenter | Qt::AlignBottom);
@@ -614,19 +618,19 @@ PreviewItemDelegate::PreviewItemDelegate(ThumbnailView* view)
     d->mContextBar->hide();
 
     d->mToggleSelectionButton = new QToolButton;
-    d->mToggleSelectionButton->setIcon(QIcon::fromTheme("list-add"));
+    d->mToggleSelectionButton->setIcon(QIcon::fromTheme(QStringLiteral("list-add")));
     connect(d->mToggleSelectionButton, &QToolButton::clicked, this, &PreviewItemDelegate::slotToggleSelectionClicked);
 
     d->mFullScreenButton = new QToolButton;
-    d->mFullScreenButton->setIcon(QIcon::fromTheme("view-fullscreen"));
+    d->mFullScreenButton->setIcon(QIcon::fromTheme(QStringLiteral("view-fullscreen")));
     connect(d->mFullScreenButton, &QToolButton::clicked, this, &PreviewItemDelegate::slotFullScreenClicked);
 
     d->mRotateLeftButton = new QToolButton;
-    d->mRotateLeftButton->setIcon(QIcon::fromTheme("object-rotate-left"));
+    d->mRotateLeftButton->setIcon(QIcon::fromTheme(QStringLiteral("object-rotate-left")));
     connect(d->mRotateLeftButton, &QToolButton::clicked, this, &PreviewItemDelegate::slotRotateLeftClicked);
 
     d->mRotateRightButton = new QToolButton;
-    d->mRotateRightButton->setIcon(QIcon::fromTheme("object-rotate-right"));
+    d->mRotateRightButton->setIcon(QIcon::fromTheme(QStringLiteral("object-rotate-right")));
     connect(d->mRotateRightButton, &QToolButton::clicked, this, &PreviewItemDelegate::slotRotateRightClicked);
 
     QHBoxLayout* layout = new QHBoxLayout(d->mContextBar);
@@ -639,7 +643,7 @@ PreviewItemDelegate::PreviewItemDelegate(ThumbnailView* view)
 
     // Save button
     d->mSaveButton = new QToolButton(d->mView->viewport());
-    d->mSaveButton->setIcon(QIcon::fromTheme("document-save"));
+    d->mSaveButton->setIcon(QIcon::fromTheme(QStringLiteral("document-save")));
     d->mSaveButton->hide();
     connect(d->mSaveButton, &QToolButton::clicked, this, &PreviewItemDelegate::slotSaveClicked);
 }
@@ -822,7 +826,7 @@ void PreviewItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem &
 
     if (!isDirOrArchive && (d->mDetails & PreviewItemDelegate::ImageSizeDetail)) {
         if (fullSize.isValid()) {
-            const QString text = QString("%1x%2").arg(fullSize.width()).arg(fullSize.height());
+            const QString text = QStringLiteral("%1x%2").arg(fullSize.width()).arg(fullSize.height());
             d->drawText(painter, textRect, fgColor, text);
             textRect.moveTop(textRect.bottom());
         }
@@ -883,7 +887,6 @@ void PreviewItemDelegate::slotFullScreenClicked()
 void PreviewItemDelegate::slotToggleSelectionClicked()
 {
     d->mView->selectionModel()->select(d->mIndexUnderCursor, QItemSelectionModel::Toggle);
-    d->updateToggleSelectionButton();
 }
 
 PreviewItemDelegate::ThumbnailDetails PreviewItemDelegate::thumbnailDetails() const
@@ -954,7 +957,7 @@ void PreviewItemDelegate::updateEditorGeometry(QWidget* widget, const QStyleOpti
         return;
     }
     QString text = index.data().toString();
-    int textWidth = edit->fontMetrics().width("  " + text + "  ");
+    int textWidth = edit->fontMetrics().width(QStringLiteral("  ") + text + QStringLiteral("  "));
     QRect textRect(
         option.rect.left() + (option.rect.width() - textWidth) / 2,
         option.rect.top() + 2 * ITEM_MARGIN + d->mThumbnailSize.height(),

@@ -46,15 +46,15 @@ public:
     };
     Q_DECLARE_FLAGS(Options, Option)
 
-    HudWidget(QGraphicsWidget* parent = 0);
-    ~HudWidget();
+    explicit HudWidget(QGraphicsWidget* parent = nullptr);
+    ~HudWidget() override;
 
     void init(QWidget*, Options options);
     void init(QGraphicsWidget*, Options options);
 
     void setAutoDeleteOnFadeout(bool autoDelete);
 
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) Q_DECL_OVERRIDE;
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
 public Q_SLOTS:
     void fadeIn();

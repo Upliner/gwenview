@@ -28,7 +28,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <QClipboard>
 #include <QListView>
 #include <QMenu>
-#include <QMimeData>
 #include <QShortcut>
 
 // KDE
@@ -56,6 +55,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <lib/contextmanager.h>
 #include <lib/eventwatcher.h>
 #include <lib/gvdebug.h>
+#include <lib/mimetypeutils.h>
 #include "fileoperations.h"
 #include "sidebar.h"
 
@@ -88,10 +88,16 @@ void FileOpsContextManagerItem::updateServiceList()
 
 QMimeData* FileOpsContextManagerItem::selectionMimeData()
 {
-    QMimeData* mimeData = new QMimeData;
-    KFileItemList list = contextManager()->selectedFileItemList();
-    mimeData->setUrls(list.urlList());
-    return mimeData;
+    KFileItemList selectedFiles;
+
+    // In Compare mode, restrict the returned mimedata to the focused image
+    if (!mThumbnailView->isVisible()) {
+        selectedFiles << KFileItem(contextManager()->currentUrl());
+    } else {
+        selectedFiles = contextManager()->selectedFileItemList();
+    }
+
+    return MimeTypeUtils::selectionMimeData(selectedFiles, MimeTypeUtils::ClipboardTarget);
 }
 
 QUrl FileOpsContextManagerItem::pasteTargetUrl() const
@@ -215,7 +221,6 @@ FileOpsContextManagerItem::FileOpsContextManagerItem(ContextManager* manager, QL
 
     connect(QApplication::clipboard(), SIGNAL(dataChanged()),
             SLOT(updatePasteAction()));
-    updatePasteAction();
 
     // Delay action update because it must happen *after* main window has called
     // createGUI(), otherwise calling mXMLGUIClient->plugActionList() will
@@ -257,6 +262,7 @@ void FileOpsContextManagerItem::updateActions()
     mXMLGUIClient->plugActionList("file_action_list", list);
 
     updateSideBarContent();
+    updatePasteAction();
 }
 
 void FileOpsContextManagerItem::updatePasteAction()

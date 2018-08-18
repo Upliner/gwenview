@@ -40,15 +40,15 @@ class GWENVIEWLIB_EXPORT FullScreenBar : public QFrame
 {
     Q_OBJECT
 public:
-    FullScreenBar(QWidget* parent);
-    ~FullScreenBar();
+    explicit FullScreenBar(QWidget* parent);
+    ~FullScreenBar() override;
 
     void setActivated(bool);
 
     void setAutoHidingEnabled(bool);
     void setEdgeTriggerEnabled(bool);
 
-    QSize sizeHint() const Q_DECL_OVERRIDE;
+    QSize sizeHint() const override;
 
 public Q_SLOTS:
     void slideIn();
@@ -60,7 +60,7 @@ private Q_SLOTS:
     void delayedInstallEventFilter();
 
 protected:
-    bool eventFilter(QObject*, QEvent*) Q_DECL_OVERRIDE;
+    bool eventFilter(QObject*, QEvent*) override;
 
 private:
     FullScreenBarPrivate* const d;

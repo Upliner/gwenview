@@ -56,7 +56,7 @@ public:
     static const int MaxViewCount;
 
     ViewMainPage(QWidget* parent, SlideShow*, KActionCollection*, GvCore*);
-    ~ViewMainPage();
+    ~ViewMainPage() override;
 
     ThumbnailBarView* thumbnailBar() const;
 
@@ -73,8 +73,8 @@ public:
 
     int statusBarHeight() const;
 
-    QSize sizeHint() const Q_DECL_OVERRIDE;
-    QSize minimumSizeHint() const Q_DECL_OVERRIDE;
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
 
     /**
      * Returns the url of the current document, or an invalid url if unknown
@@ -124,6 +124,10 @@ Q_SIGNALS:
 
     void nextImageRequested();
 
+    void openUrlRequested(const QUrl&);
+
+    void openDirUrlRequested(const QUrl&);
+
     void toggleFullScreenRequested();
 
     void goToBrowseModeRequested();
@@ -148,7 +152,7 @@ private Q_SLOTS:
     void slotDirModelItemsAddedOrRemoved();
 
 protected:
-    bool eventFilter(QObject* watched, QEvent* event) Q_DECL_OVERRIDE;
+    bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
     friend struct ViewMainPagePrivate;

@@ -46,12 +46,12 @@ public:
         GroupCenter = 3
     };
 
-    StatusBarToolButton(QWidget* parent = 0);
+    explicit StatusBarToolButton(QWidget* parent = nullptr);
 
     void setGroupPosition(StatusBarToolButton::GroupPosition groupPosition);
 
 protected:
-    virtual void paintEvent(QPaintEvent* event) Q_DECL_OVERRIDE;
+    void paintEvent(QPaintEvent* event) override;
 
 private:
     GroupPosition mGroupPosition;

@@ -57,8 +57,8 @@ public:
         ScaleToWidth,
         ScaleToFit
     };
-    ThumbnailView(QWidget* parent);
-    ~ThumbnailView();
+    explicit ThumbnailView(QWidget* parent);
+    ~ThumbnailView() override;
 
     void setThumbnailViewHelper(AbstractThumbnailViewHelper* helper);
 
@@ -82,7 +82,7 @@ public:
      */
     qreal thumbnailAspectRatio() const;
 
-    QPixmap thumbnailForIndex(const QModelIndex&, QSize* fullSize = 0);
+    QPixmap thumbnailForIndex(const QModelIndex&, QSize* fullSize = nullptr);
 
     /**
      * Returns true if the document pointed by the index has been modified
@@ -96,7 +96,7 @@ public:
      */
     bool isBusy(const QModelIndex& index) const;
 
-    virtual void setModel(QAbstractItemModel* model) Q_DECL_OVERRIDE;
+    void setModel(QAbstractItemModel* model) override;
 
     void setThumbnailProvider(ThumbnailProvider* thumbnailProvider);
 
@@ -158,30 +158,30 @@ public Q_SLOTS:
     void generateThumbnailsForItems();
 
 protected:
-    virtual void dragEnterEvent(QDragEnterEvent*) Q_DECL_OVERRIDE;
+    void dragEnterEvent(QDragEnterEvent*) override;
 
-    virtual void dragMoveEvent(QDragMoveEvent*) Q_DECL_OVERRIDE;
+    void dragMoveEvent(QDragMoveEvent*) override;
 
-    virtual void dropEvent(QDropEvent*) Q_DECL_OVERRIDE;
+    void dropEvent(QDropEvent*) override;
 
-    virtual void keyPressEvent(QKeyEvent*) Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent*) override;
 
-    virtual void resizeEvent(QResizeEvent*) Q_DECL_OVERRIDE;
+    void resizeEvent(QResizeEvent*) override;
 
-    virtual void scrollContentsBy(int dx, int dy) Q_DECL_OVERRIDE;
+    void scrollContentsBy(int dx, int dy) override;
 
-    virtual void showEvent(QShowEvent*) Q_DECL_OVERRIDE;
+    void showEvent(QShowEvent*) override;
 
-    virtual void wheelEvent(QWheelEvent*) Q_DECL_OVERRIDE;
+    void wheelEvent(QWheelEvent*) override;
 
-    virtual void startDrag(Qt::DropActions) Q_DECL_OVERRIDE;
+    void startDrag(Qt::DropActions) override;
 
 protected Q_SLOTS:
-    virtual void rowsAboutToBeRemoved(const QModelIndex& parent, int start, int end) Q_DECL_OVERRIDE;
-    virtual void rowsInserted(const QModelIndex& parent, int start, int end) Q_DECL_OVERRIDE;
-    virtual void selectionChanged(const QItemSelection& selected, const QItemSelection& deselected) Q_DECL_OVERRIDE;
+    void rowsAboutToBeRemoved(const QModelIndex& parent, int start, int end) override;
+    void rowsInserted(const QModelIndex& parent, int start, int end) override;
+    void selectionChanged(const QItemSelection& selected, const QItemSelection& deselected) override;
     virtual void dataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight,
-                             const QVector<int> &roles = QVector<int>()) Q_DECL_OVERRIDE;
+                             const QVector<int> &roles = QVector<int>()) override;
 
 private Q_SLOTS:
     void showContextMenu();

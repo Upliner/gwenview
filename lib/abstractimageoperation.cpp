@@ -47,9 +47,14 @@ public:
         delete mOp;
     }
 
-    void undo() Q_DECL_OVERRIDE
+    void undo() override
     {
         mOp->undo();
+    }
+
+    void redo() override
+    {
+        mOp->redo();
     }
 
 private:
@@ -60,6 +65,7 @@ struct AbstractImageOperationPrivate
 {
     QString mText;
     QUrl mUrl;
+    ImageOperationCommand* mCommand;
 };
 
 AbstractImageOperation::AbstractImageOperation()
@@ -75,7 +81,11 @@ AbstractImageOperation::~AbstractImageOperation()
 void AbstractImageOperation::applyToDocument(Document::Ptr doc)
 {
     d->mUrl = doc->url();
-    redo();
+
+    d->mCommand = new ImageOperationCommand(this);
+    d->mCommand->setText(d->mText);
+    // QUndoStack::push() executes command by calling its redo() function
+    doc->undoStack()->push(d->mCommand);
 }
 
 Document::Ptr AbstractImageOperation::document() const
@@ -88,25 +98,19 @@ Document::Ptr AbstractImageOperation::document() const
 void AbstractImageOperation::finish(bool ok)
 {
     if (ok) {
-        ImageOperationCommand* command = new ImageOperationCommand(this);
-        command->setText(d->mText);
-        document()->undoStack()->push(command);
-        document()->imageOperationCompleted();
+        // Give QUndoStack time to update in case the redo/undo is executed immediately
+        // (e.g. undo crop just sets the previous image)
+        QTimer::singleShot(0, document().data(), &Document::imageOperationCompleted);
     } else {
-        deleteLater();
+        // Remove command from undo stack without executing undo()
+        d->mCommand->setObsolete(true);
+        document()->undoStack()->undo();
     }
 }
 
 void AbstractImageOperation::finishFromKJob(KJob* job)
 {
     finish(job->error() == KJob::NoError);
-}
-
-void AbstractImageOperation::finishUndoJob()
-{
-    // Give QUndoStack time to update in case the undo is executed immediately
-    // (e.g. undo crop just sets the previous image)
-    QTimer::singleShot(0, document().data(), &Document::imageOperationCompleted);
 }
 
 void AbstractImageOperation::setText(const QString& text)

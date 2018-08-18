@@ -35,10 +35,10 @@ class EmptyDocumentImpl : public AbstractDocumentImpl
 {
 public:
     EmptyDocumentImpl(Document*);
-    ~EmptyDocumentImpl();
+    ~EmptyDocumentImpl() override;
 
-    virtual void init() Q_DECL_OVERRIDE;
-    virtual Document::LoadingState loadingState() const Q_DECL_OVERRIDE;
+    void init() override;
+    Document::LoadingState loadingState() const override;
 };
 
 } // namespace

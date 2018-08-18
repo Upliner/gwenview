@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Cambridge, MA 02110-1301, USA
 #include <QUrl>
 #include <QImageWriter>
 #include <QMimeDatabase>
+#include <QDebug>
 
 // KDE
 #include <QFileDialog>
@@ -70,6 +71,9 @@ struct GvCorePrivate
         DialogGuard<QFileDialog> dialog(mMainWindow);
         dialog->setAcceptMode(QFileDialog::AcceptSave);
         dialog->setWindowTitle(i18nc("@title:window", "Save Image"));
+        // Temporary workaround for selectUrl() not setting the
+        // initial directory to url (removed in D4193)
+        dialog->setDirectoryUrl(url.adjusted(QUrl::RemoveFilename));
         dialog->selectUrl(url);
 
         QStringList supportedMimetypes;
@@ -136,7 +140,7 @@ struct GvCorePrivate
             config = KSharedConfig::openConfig(mFullScreenPaletteName);
         } else {
             // Standard KDE color scheme
-            mFullScreenPaletteName = QString("color-schemes/%1.colors").arg(name);
+            mFullScreenPaletteName = QStringLiteral("color-schemes/%1.colors").arg(name);
             config = KSharedConfig::openConfig(mFullScreenPaletteName, KConfig::FullConfig, QStandardPaths::AppDataLocation);
         }
         mPalettes[GvCore::FullScreenPalette] = KColorScheme::createApplicationPalette(config);
@@ -251,8 +255,8 @@ GvCore::GvCore(MainWindow* mainWindow, SortedDirModel* dirModel)
     d->q = this;
     d->mMainWindow = mainWindow;
     d->mDirModel = dirModel;
-    d->mRecentFoldersModel = 0;
-    d->mRecentFilesModel = 0;
+    d->mRecentFoldersModel = nullptr;
+    d->mRecentFilesModel = nullptr;
 
     d->setupPalettes();
 

@@ -44,18 +44,18 @@ class GWENVIEWLIB_EXPORT SaveJob : public DocumentJob
     Q_OBJECT
 public:
     SaveJob(DocumentLoadedImpl* impl, const QUrl &url, const QByteArray& format);
-    ~SaveJob();
+    ~SaveJob() override;
     void saveInternal();
 
     QUrl oldUrl() const;
     QUrl newUrl() const;
 
 protected Q_SLOTS:
-    virtual void doStart() Q_DECL_OVERRIDE;
-    virtual void slotResult(KJob*) Q_DECL_OVERRIDE;
+    void doStart() override;
+    void slotResult(KJob*) override;
 
 protected:
-    virtual bool doKill() Q_DECL_OVERRIDE;
+    bool doKill() override;
 
 private Q_SLOTS:
     void finishSave();

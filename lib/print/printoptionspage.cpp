@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #include <QButtonGroup>
 #include <QGridLayout>
 #include <QToolButton>
+#include <QDebug>
 
 // KDE
 #include <KConfigDialogManager>
@@ -58,7 +59,7 @@ struct PrintOptionsPagePrivate : public Ui_PrintOptionsPage
     void initPositionFrame()
     {
         mPositionFrame->setStyleSheet(
-            "QFrame {"
+            QStringLiteral("QFrame {"
             "	background-color: palette(mid);"
             "	border: 1px solid palette(dark);"
             "}"
@@ -72,7 +73,7 @@ struct PrintOptionsPagePrivate : public Ui_PrintOptionsPage
             "}"
             "QToolButton:checked {"
             "	background-color: palette(highlight);"
-            "}"
+            "}")
         );
 
         QGridLayout* layout = new QGridLayout(mPositionFrame);

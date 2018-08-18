@@ -110,7 +110,7 @@ class KeyValueWidget : public QWidget
         QLabel* valueLabel;
     };
 public:
-    KeyValueWidget(QWidget* parent = 0)
+    explicit KeyValueWidget(QWidget* parent = nullptr)
     : QWidget(parent)
     {
         QSizePolicy policy(QSizePolicy::Preferred, QSizePolicy::Fixed);
@@ -118,14 +118,14 @@ public:
         setSizePolicy(policy);
     }
 
-    QSize sizeHint() const Q_DECL_OVERRIDE
+    QSize sizeHint() const override
     {
         int width = 150;
         int height = heightForWidth(width);
         return QSize(width, height);
     }
 
-    int heightForWidth(int w) const Q_DECL_OVERRIDE
+    int heightForWidth(int w) const override
     {
         int height = 0;
         Q_FOREACH(Row* row, mRows) {
@@ -175,13 +175,13 @@ public:
     }
 
 protected:
-    void showEvent(QShowEvent* event) Q_DECL_OVERRIDE
+    void showEvent(QShowEvent* event) override
     {
         QWidget::showEvent(event);
         layoutRows();
     }
 
-    void resizeEvent(QResizeEvent* event) Q_DECL_OVERRIDE
+    void resizeEvent(QResizeEvent* event) override
     {
         QWidget::resizeEvent(event);
         layoutRows();
@@ -211,7 +211,7 @@ struct InfoContextManagerItemPrivate
         if (!mImageMetaInfoDialog) {
             return;
         }
-        ImageMetaInfoModel* model = mDocument ? mDocument->metaInfo() : 0;
+        ImageMetaInfoModel* model = mDocument ? mDocument->metaInfo() : nullptr;
         mImageMetaInfoDialog->setMetaInfo(model, GwenviewConfig::preferredMetaInfoKeyList());
     }
 
@@ -224,7 +224,7 @@ struct InfoContextManagerItemPrivate
         mKeyValueWidget = new KeyValueWidget;
 
         QLabel* moreLabel = new QLabel(mOneFileWidget);
-        moreLabel->setText(QString("<a href='#'>%1</a>").arg(i18nc("@action show more image meta info", "More...")));
+        moreLabel->setText(QStringLiteral("<a href='#'>%1</a>").arg(i18nc("@action show more image meta info", "More...")));
         moreLabel->setAlignment(Qt::AlignRight);
 
         QWidget* content = new QWidget;
@@ -251,9 +251,9 @@ struct InfoContextManagerItemPrivate
     void forgetCurrentDocument()
     {
         if (mDocument) {
-            QObject::disconnect(mDocument.data(), 0, q, 0);
+            QObject::disconnect(mDocument.data(), nullptr, q, nullptr);
             // "Garbage collect" document
-            mDocument = 0;
+            mDocument = nullptr;
         }
     }
 };
@@ -369,7 +369,7 @@ void InfoContextManagerItem::showMetaInfoDialog()
         connect(d->mImageMetaInfoDialog, SIGNAL(preferredMetaInfoKeyListChanged(QStringList)),
                 SLOT(slotPreferredMetaInfoKeyListChanged(QStringList)));
     }
-    d->mImageMetaInfoDialog->setMetaInfo(d->mDocument ? d->mDocument->metaInfo() : 0, GwenviewConfig::preferredMetaInfoKeyList());
+    d->mImageMetaInfoDialog->setMetaInfo(d->mDocument ? d->mDocument->metaInfo() : nullptr, GwenviewConfig::preferredMetaInfoKeyList());
     d->mImageMetaInfoDialog->show();
 }
 

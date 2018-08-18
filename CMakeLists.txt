@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.0 FATAL_ERROR)
 
 # KDE Application Version, managed by release script
 set (KDE_APPLICATIONS_VERSION_MAJOR "18")
-set (KDE_APPLICATIONS_VERSION_MINOR "07")
+set (KDE_APPLICATIONS_VERSION_MINOR "11")
 set (KDE_APPLICATIONS_VERSION_MICRO "70")
 set (KDE_APPLICATIONS_VERSION "${KDE_APPLICATIONS_VERSION_MAJOR}.${KDE_APPLICATIONS_VERSION_MINOR}.${KDE_APPLICATIONS_VERSION_MICRO}")
 
@@ -10,29 +10,10 @@ project(gwenview VERSION ${KDE_APPLICATIONS_VERSION})
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake )
 
-set (QT_MIN_VERSION "5.6.0")
+set (QT_MIN_VERSION "5.9.0")
+set (KF5_MIN_VERSION "5.43.0")
 
-option(RUN_UNINSTALL "test run uninstalled apps (experimental)" FALSE)
-
-set(ECM_VERSION 1.7.0)
-# ECM setup
-if (RUN_UNINSTALL)
-   set(ECM_VERSION "5.38.0")
-endif()
-
-
-
-find_package(ECM ${ECM_VERSION} REQUIRED NO_MODULE)
-
-# Ccache support
-if (UNIX OR APPLE)
-    find_program(CCACHE_FOUND ccache)
-    set(CCACHE_SUPPORT OFF CACHE BOOL "Enable ccache support")
-    if (CCACHE_FOUND AND CCACHE_SUPPORT MATCHES ON)
-        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-        set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-    endif ()
-endif ()
+find_package(ECM ${KF5_MIN_VERSION} REQUIRED NO_MODULE)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
 
@@ -78,9 +59,8 @@ find_package(Phonon4Qt5 4.6.60 NO_MODULE REQUIRED)
 include_directories(BEFORE ${PHONON_INCLUDES})
 add_definitions(-DPHONON_LIB_SONAME=\"${PHONON_LIB_SONAME}\")
 
-find_package(KF5 5.25 REQUIRED COMPONENTS
+find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
     KIO
-    Activities
     ItemModels
     I18n
     DocTools
@@ -88,6 +68,9 @@ find_package(KF5 5.25 REQUIRED COMPONENTS
     WindowSystem
     IconThemes
     Notifications
+)
+find_package(KF5 ${KF5_MIN_VERSION} OPTIONAL_COMPONENTS
+    Activities
 )
 
 ## Dependencies

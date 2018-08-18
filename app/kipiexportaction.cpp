@@ -46,8 +46,10 @@ struct KIPIExportActionPrivate
         QMenu* menu = static_cast<QMenu*>(q->menu());
         menu->clear();
 
-        if (mDefaultAction) {
-            menu->addSection(i18n("Last Used Plugin"));
+        if (mDefaultAction && mExportActionList.contains(mDefaultAction)) {
+            if (mExportActionList.count() > 1) {
+                menu->addSection(i18n("Last Used Plugin"));
+            }
             menu->addAction(mDefaultAction);
             menu->addSection(i18n("Other Plugins"));
         }
@@ -56,12 +58,6 @@ struct KIPIExportActionPrivate
             if (action != mDefaultAction) {
                 menu->addAction(action);
             }
-        }
-        if (menu->isEmpty()) {
-            QAction* action = new QAction(menu);
-            action->setText(i18n("No Plugin Found"));
-            action->setEnabled(false);
-            menu->addAction(action);
         }
     }
 };
@@ -88,6 +84,7 @@ KIPIExportAction::~KIPIExportAction()
 void KIPIExportAction::setKIPIInterface(KIPIInterface* interface)
 {
     d->mKIPIInterface = interface;
+    connect(d->mKIPIInterface, &KIPIInterface::loadingFinished, this, &KIPIExportAction::init);
 }
 
 void KIPIExportAction::init()
@@ -104,9 +101,9 @@ void KIPIExportAction::init()
         }
         // We are done, don't come back next time menu is shown
         disconnect(menu(), SIGNAL(aboutToShow()), this, SLOT(init()));
-    } else {
-        // Loading is in progress, come back when it is done
-        connect(d->mKIPIInterface, &KIPIInterface::loadingFinished, this, &KIPIExportAction::init);
+        // TODO: Temporary fix for the 'Share' menu not showing when updated
+        // the second time. See Bug 395034 and D13312
+        d->updateMenu();
     }
     d->updateMenu();
 }

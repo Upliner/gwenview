@@ -25,7 +25,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QApplication>
 #include <QStringList>
 #include <QDebug>
+#include <QFileInfo>
 #include <QUrl>
+#include <QMimeData>
 #include <QMimeDatabase>
 #include <QImageReader>
 
@@ -36,6 +38,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 // Local
 #include <archiveutils.h>
+#include <lib/document/documentfactory.h>
 #include <gvdebug.h>
 
 namespace Gwenview
@@ -63,23 +66,23 @@ static void resolveAliasInList(QStringList* list)
 static void addRawMimeTypes(QStringList* list)
 {
     // need to invent more intelligent way to whitelist raws
-    *list += "image/x-nikon-nef";
-    *list += "image/x-nikon-nrw";
-    *list += "image/x-canon-cr2";
-    *list += "image/x-canon-crw";
-    *list += "image/x-pentax-pef";
-    *list += "image/x-adobe-dng";
-    *list += "image/x-sony-arw";
-    *list += "image/x-minolta-mrw";
-    *list += "image/x-panasonic-raw";
-    *list += "image/x-panasonic-raw2";
-    *list += "image/x-panasonic-rw";
-    *list += "image/x-panasonic-rw2";
-    *list += "image/x-samsung-srw";
-    *list += "image/x-olympus-orf";
-    *list += "image/x-fuji-raf";
-    *list += "image/x-kodak-dcr";
-    *list += "image/x-sigma-x3f";
+    *list += QStringLiteral("image/x-nikon-nef");
+    *list += QStringLiteral("image/x-nikon-nrw");
+    *list += QStringLiteral("image/x-canon-cr2");
+    *list += QStringLiteral("image/x-canon-crw");
+    *list += QStringLiteral("image/x-pentax-pef");
+    *list += QStringLiteral("image/x-adobe-dng");
+    *list += QStringLiteral("image/x-sony-arw");
+    *list += QStringLiteral("image/x-minolta-mrw");
+    *list += QStringLiteral("image/x-panasonic-raw");
+    *list += QStringLiteral("image/x-panasonic-raw2");
+    *list += QStringLiteral("image/x-panasonic-rw");
+    *list += QStringLiteral("image/x-panasonic-rw2");
+    *list += QStringLiteral("image/x-samsung-srw");
+    *list += QStringLiteral("image/x-olympus-orf");
+    *list += QStringLiteral("image/x-fuji-raf");
+    *list += QStringLiteral("image/x-kodak-dcr");
+    *list += QStringLiteral("image/x-sigma-x3f");
 }
 
 const QStringList& rasterImageMimeTypes()
@@ -103,7 +106,7 @@ const QStringList& svgImageMimeTypes()
 {
     static QStringList list;
     if (list.isEmpty()) {
-        list << "image/svg+xml" << "image/svg+xml-compressed";
+        list << QStringLiteral("image/svg+xml") << QStringLiteral("image/svg+xml-compressed");
         resolveAliasInList(&list);
     }
     return list;
@@ -123,7 +126,7 @@ const QStringList& imageMimeTypes()
 QString urlMimeType(const QUrl &url)
 {
     if (url.isEmpty()) {
-        return "unknown";
+        return QStringLiteral("unknown");
     }
 
     QMimeDatabase db;
@@ -160,6 +163,58 @@ Kind fileItemKind(const KFileItem& item)
 Kind urlKind(const QUrl &url)
 {
     return mimeTypeKind(urlMimeType(url));
+}
+
+QMimeData* selectionMimeData(const KFileItemList& selectedFiles, const MimeTarget& mimeTarget)
+{
+    QMimeData* mimeData = new QMimeData;
+
+    if (selectedFiles.count() == 1) {
+
+        // When a single file is selected, there are a couple of cases:
+        // - Pasting unmodified images: Set both image data and URL
+        //   (since some apps only support either image data or URL)
+        // - Dragging unmodified images: Only set URL
+        //   (otherwise dragging to Chromium or the desktop fails, see https://phabricator.kde.org/D13249#300894)
+        // - Dragging or pasting modified images: Only set image data
+        //   (otherwise some apps prefer the URL, which would only contain the unmodified image)
+
+        const QUrl url = selectedFiles.first().url();
+        const MimeTypeUtils::Kind mimeKind = MimeTypeUtils::urlKind(url);
+        bool documentIsModified = false;
+
+        if (mimeKind == MimeTypeUtils::KIND_RASTER_IMAGE || mimeKind == MimeTypeUtils::KIND_SVG_IMAGE) {
+            const Document::Ptr doc = DocumentFactory::instance()->load(url);
+            doc->waitUntilLoaded();
+            documentIsModified = doc->isModified();
+
+            if (mimeTarget == ClipboardTarget || (mimeTarget == DropTarget && documentIsModified)) {
+                QString suggestedFileName;
+
+                if (mimeKind == MimeTypeUtils::KIND_RASTER_IMAGE) {
+                    mimeData->setImageData(doc->image());
+
+                    // Set the filename extension to PNG, as it is the first
+                    // entry in the combobox when pasting to Dolphin
+                    suggestedFileName = QFileInfo(url.fileName()).completeBaseName() + QStringLiteral(".png");
+                } else {
+                    mimeData->setData(MimeTypeUtils::urlMimeType(url), doc->rawData());
+                    suggestedFileName = url.fileName();
+                }
+
+                mimeData->setData(QStringLiteral("application/x-kde-suggestedfilename"),
+                                  QFile::encodeName(suggestedFileName));
+            }
+        }
+
+        if (!documentIsModified) {
+            mimeData->setUrls({url});
+        }
+    } else {
+        mimeData->setUrls(selectedFiles.urlList());
+    }
+
+    return mimeData;
 }
 
 DataAccumulator::DataAccumulator(KIO::TransferJob* job)

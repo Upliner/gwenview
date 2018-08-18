@@ -101,7 +101,6 @@ void DocumentTest::testLoad()
 
     Document::Ptr doc = DocumentFactory::instance()->load(url);
     QSignalSpy spy(doc.data(), SIGNAL(isAnimatedUpdated()));
-    doc->startLoadingFullImage();
     doc->waitUntilLoaded();
     QCOMPARE(doc->loadingState(), Document::Loaded);
 
@@ -182,7 +181,6 @@ void DocumentTest::testLoadTwoPasses()
     waitUntilMetaInfoLoaded(doc);
     QVERIFY2(doc->image().isNull(), "Image shouldn't have been loaded at this time");
     QCOMPARE(doc->format().data(), "png");
-    doc->startLoadingFullImage();
     doc->waitUntilLoaded();
     QCOMPARE(image, doc->image());
 }
@@ -273,7 +271,6 @@ void DocumentTest::testLoadRemote()
     QVERIFY2(KIO::stat(url, KIO::StatJob::SourceSide, 0)->exec(), "test url not found");
 
     Document::Ptr doc = DocumentFactory::instance()->load(url);
-    doc->startLoadingFullImage();
     doc->waitUntilLoaded();
     QImage image = doc->image();
     QCOMPARE(image.width(), 150);
@@ -285,7 +282,6 @@ void DocumentTest::testLoadAnimated()
     QUrl srcUrl = urlForTestFile("40frames.gif");
     Document::Ptr doc = DocumentFactory::instance()->load(srcUrl);
     QSignalSpy spy(doc.data(), SIGNAL(imageRectUpdated(QRect)));
-    doc->startLoadingFullImage();
     doc->waitUntilLoaded();
     QVERIFY(doc->isAnimated());
 
@@ -316,7 +312,6 @@ void DocumentTest::testPrepareDownSampledAfterFailure()
     QUrl url = urlForTestFile("empty.png");
     Document::Ptr doc = DocumentFactory::instance()->load(url);
 
-    doc->startLoadingFullImage();
     doc->waitUntilLoaded();
     QCOMPARE(doc->loadingState(), Document::LoadingFailed);
 
@@ -333,7 +328,6 @@ void DocumentTest::testSaveRemote()
 
     QUrl srcUrl = urlForTestFile("test.png");
     Document::Ptr doc = DocumentFactory::instance()->load(srcUrl);
-    doc->startLoadingFullImage();
     doc->waitUntilLoaded();
 
     dstUrl = dstUrl.adjusted(QUrl::StripTrailingSlash);
@@ -368,7 +362,6 @@ void DocumentTest::testLoadRotated()
     image = image.transformed(matrix);
 
     Document::Ptr doc = DocumentFactory::instance()->load(url);
-    doc->startLoadingFullImage();
     doc->waitUntilLoaded();
     QCOMPARE(image, doc->image());
 
@@ -382,7 +375,6 @@ void DocumentTest::testLoadRotated()
     image = image.transformed(matrix);
 
     doc = DocumentFactory::instance()->load(url);
-    doc->startLoadingFullImage();
     doc->waitUntilLoaded();
     QCOMPARE(image, doc->image());
 }
@@ -474,7 +466,6 @@ void DocumentTest::testLosslessRotate()
 
     // Load it as a Gwenview document
     Document::Ptr doc = DocumentFactory::instance()->load(url1);
-    doc->startLoadingFullImage();
     doc->waitUntilLoaded();
 
     // Rotate one time
@@ -487,7 +478,6 @@ void DocumentTest::testLosslessRotate()
 
     // Load the saved image
     doc = DocumentFactory::instance()->load(url2);
-    doc->startLoadingFullImage();
     doc->waitUntilLoaded();
 
     // Rotate the other way
@@ -525,7 +515,6 @@ void DocumentTest::testModifyAndSaveAs()
     QSignalSpy modifiedDocumentListChangedSpy(factory, SIGNAL(modifiedDocumentListChanged()));
     QSignalSpy documentChangedSpy(factory, SIGNAL(documentChanged(QUrl)));
 
-    doc->startLoadingFullImage();
     doc->waitUntilLoaded();
     QVERIFY(!doc->isModified());
     QCOMPARE(modifiedDocumentListChangedSpy.count(), 0);
@@ -534,6 +523,7 @@ void DocumentTest::testModifyAndSaveAs()
     QVERIFY(doc->editor());
     TestOperation* op = new TestOperation;
     op->applyToDocument(doc);
+    QTest::qWait(100);
     QVERIFY(doc->isModified());
     QCOMPARE(modifiedDocumentListChangedSpy.count(), 1);
     modifiedDocumentListChangedSpy.clear();
@@ -599,7 +589,7 @@ void DocumentTest::testMetaInfoBmp()
     Q_ASSERT(metaInfoUpdatedSpy.count() >= 1);
 
     QString value = doc->metaInfo()->getValueForKey("General.ImageSize");
-    QString expectedValue = QString("%1x%2").arg(width).arg(height);
+    QString expectedValue = QStringLiteral("%1x%2").arg(width).arg(height);
     QCOMPARE(value, expectedValue);
 }
 
@@ -624,7 +614,6 @@ void DocumentTest::testForgetModifiedDocument()
 
     // Load it as a Gwenview document
     Document::Ptr doc = DocumentFactory::instance()->load(url);
-    doc->startLoadingFullImage();
     doc->waitUntilLoaded();
 
     // Modify it
@@ -654,7 +643,6 @@ void DocumentTest::testModifiedAndSavedSignals()
     Document::Ptr doc = DocumentFactory::instance()->load(url);
     QSignalSpy modifiedSpy(doc.data(), SIGNAL(modified(QUrl)));
     QSignalSpy savedSpy(doc.data(), SIGNAL(saved(QUrl,QUrl)));
-    doc->startLoadingFullImage();
     doc->waitUntilLoaded();
 
     QCOMPARE(modifiedSpy.count(), 0);
@@ -722,7 +710,7 @@ void DocumentTest::testJobQueue()
     row = spy.takeFirst();
     QCOMPARE(row.at(0).value<QUrl>(), url);
     QVERIFY(!row.at(1).toBool());
-    QCOMPARE(str, QString("abc"));
+    QCOMPARE(str, QStringLiteral("abc"));
 }
 
 class TestCheckDocumentEditorJob : public DocumentJob
@@ -839,5 +827,68 @@ void DocumentTest::testUndoStackPush()
     op = new FailureOperation;
     op->applyToDocument(doc);
     QTest::qWait(100);
+    QVERIFY(doc->undoStack()->isClean());
+}
+
+void DocumentTest::testUndoRedo()
+{
+    class SuccessOperation : public AbstractImageOperation
+    {
+    public:
+        int mRedoCount = 0;
+        int mUndoCount = 0;
+
+    protected:
+        virtual void redo()
+        {
+            mRedoCount++;
+            finish(true);
+        }
+
+        virtual void undo()
+        {
+            mUndoCount++;
+            finish(true);
+        }
+    };
+
+    Document::Ptr doc = DocumentFactory::instance()->load(urlForTestFile("orient6.jpg"));
+    QSignalSpy modifiedSpy(doc.data(), &Document::modified);
+    QSignalSpy savedSpy(doc.data(), &Document::saved);
+
+    SuccessOperation* op = new SuccessOperation;
+    QCOMPARE(op->mRedoCount, 0);
+    QCOMPARE(op->mUndoCount, 0);
+
+    // Apply (redo) operation
+    op->applyToDocument(doc);
+    QVERIFY(modifiedSpy.wait());
+    QCOMPARE(op->mRedoCount, 1);
+    QCOMPARE(op->mUndoCount, 0);
+    QCOMPARE(doc->undoStack()->count(), 1);
+    QVERIFY(!doc->undoStack()->isClean());
+
+    // Undo operation
+    doc->undoStack()->undo();
+    QVERIFY(savedSpy.wait());
+    QCOMPARE(op->mRedoCount, 1);
+    QCOMPARE(op->mUndoCount, 1);
+    QCOMPARE(doc->undoStack()->count(), 1);
+    QVERIFY(doc->undoStack()->isClean());
+
+    // Redo operation
+    doc->undoStack()->redo();
+    QVERIFY(modifiedSpy.wait());
+    QCOMPARE(op->mRedoCount, 2);
+    QCOMPARE(op->mUndoCount, 1);
+    QCOMPARE(doc->undoStack()->count(), 1);
+    QVERIFY(!doc->undoStack()->isClean());
+
+    // Undo operation again
+    doc->undoStack()->undo();
+    QVERIFY(savedSpy.wait());
+    QCOMPARE(op->mRedoCount, 2);
+    QCOMPARE(op->mUndoCount, 2);
+    QCOMPARE(doc->undoStack()->count(), 1);
     QVERIFY(doc->undoStack()->isClean());
 }

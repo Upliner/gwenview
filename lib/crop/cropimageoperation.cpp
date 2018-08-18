@@ -43,7 +43,7 @@ public:
         : mRect(rect)
     {}
 
-    void threadedStart() Q_DECL_OVERRIDE
+    void threadedStart() override
     {
         if (!checkDocumentEditor()) {
             return;
@@ -89,7 +89,7 @@ void CropImageOperation::undo()
         return;
     }
     document()->editor()->setImage(d->mOriginalImage);
-    finishUndoJob();
+    finish(true);
 }
 
 } // namespace

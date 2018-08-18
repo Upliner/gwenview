@@ -41,10 +41,10 @@ class GWENVIEWLIB_EXPORT RasterImageView : public AbstractImageView
 {
     Q_OBJECT
 public:
-    RasterImageView(QGraphicsItem* parent = 0);
-    ~RasterImageView();
+    explicit RasterImageView(QGraphicsItem* parent = nullptr);
+    ~RasterImageView() override;
 
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) Q_DECL_OVERRIDE;
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
     void setCurrentTool(AbstractRasterImageViewTool* tool);
     AbstractRasterImageViewTool* currentTool() const;
@@ -58,18 +58,19 @@ Q_SIGNALS:
     void imageRectUpdated();
 
 protected:
-    void loadFromDocument() Q_DECL_OVERRIDE;
-    void onZoomChanged() Q_DECL_OVERRIDE;
-    void onImageOffsetChanged() Q_DECL_OVERRIDE;
-    void onScrollPosChanged(const QPointF& oldPos) Q_DECL_OVERRIDE;
-    void resizeEvent(QGraphicsSceneResizeEvent* event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QGraphicsSceneMouseEvent* event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) Q_DECL_OVERRIDE;
-    void wheelEvent(QGraphicsSceneWheelEvent* event) Q_DECL_OVERRIDE;
-    void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
-    void keyReleaseEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
-    void hoverMoveEvent(QGraphicsSceneHoverEvent*) Q_DECL_OVERRIDE;
+    void loadFromDocument() override;
+    void onZoomChanged() override;
+    void onImageOffsetChanged() override;
+    void onScrollPosChanged(const QPointF& oldPos) override;
+    void resizeEvent(QGraphicsSceneResizeEvent* event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
+    void wheelEvent(QGraphicsSceneWheelEvent* event) override;
+    void keyPressEvent(QKeyEvent* event) override;
+    void keyReleaseEvent(QKeyEvent* event) override;
+    void hoverMoveEvent(QGraphicsSceneHoverEvent*) override;
 
 private Q_SLOTS:
     void slotDocumentMetaInfoLoaded();

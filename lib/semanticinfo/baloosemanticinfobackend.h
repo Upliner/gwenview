@@ -31,7 +31,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Cambridge, MA 02110-1301, USA
 // Local
 #include "abstractsemanticinfobackend.h"
 
-class KJob;
 
 namespace Gwenview
 {
@@ -43,20 +42,20 @@ class GWENVIEWLIB_EXPORT BalooSemanticInfoBackend : public AbstractSemanticInfoB
 {
     Q_OBJECT
 public:
-    BalooSemanticInfoBackend(QObject* parent);
-    ~BalooSemanticInfoBackend();
+    explicit BalooSemanticInfoBackend(QObject* parent);
+    ~BalooSemanticInfoBackend() override;
 
-    virtual TagSet allTags() const Q_DECL_OVERRIDE;
+    TagSet allTags() const override;
 
-    virtual void refreshAllTags() Q_DECL_OVERRIDE;
+    void refreshAllTags() override;
 
-    virtual void storeSemanticInfo(const QUrl&, const SemanticInfo&) Q_DECL_OVERRIDE;
+    void storeSemanticInfo(const QUrl&, const SemanticInfo&) override;
 
-    virtual void retrieveSemanticInfo(const QUrl&) Q_DECL_OVERRIDE;
+    void retrieveSemanticInfo(const QUrl&) override;
 
-    virtual QString labelForTag(const SemanticInfoTag&) const Q_DECL_OVERRIDE;
+    QString labelForTag(const SemanticInfoTag&) const override;
 
-    virtual SemanticInfoTag tagForLabel(const QString&) Q_DECL_OVERRIDE;
+    SemanticInfoTag tagForLabel(const QString&) override;
 
 private:
     struct Private;

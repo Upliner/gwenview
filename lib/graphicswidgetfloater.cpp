@@ -98,7 +98,7 @@ GraphicsWidgetFloater::GraphicsWidgetFloater(QGraphicsWidget* parent)
     Q_ASSERT(parent);
     d->mParent = parent;
     d->mParent->installEventFilter(this);
-    d->mChild = 0;
+    d->mChild = nullptr;
     d->mAlignment = Qt::AlignCenter;
     d->mHorizontalMargin = QApplication::style()->pixelMetric(QStyle::PM_DefaultChildMargin);
     d->mVerticalMargin = d->mHorizontalMargin;
@@ -114,7 +114,7 @@ void GraphicsWidgetFloater::setChildWidget(QGraphicsWidget* child)
 {
     if (d->mChild) {
         d->mChild->removeEventFilter(this);
-        disconnect(d->mChild, 0, this, 0);
+        disconnect(d->mChild, nullptr, this, nullptr);
     }
     d->mChild = child;
     d->mChild->setParent(d->mParent);

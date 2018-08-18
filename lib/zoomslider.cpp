@@ -53,7 +53,7 @@ struct ZoomSliderPrivate
     }
 };
 
-static QToolButton* createZoomButton(const char* iconName)
+static QToolButton* createZoomButton(const QString &iconName)
 {
     QToolButton* button = new QToolButton;
     button->setIcon(QIcon::fromTheme(iconName));
@@ -66,10 +66,10 @@ ZoomSlider::ZoomSlider(QWidget* parent)
 : QWidget(parent)
 , d(new ZoomSliderPrivate)
 {
-    d->mZoomInButton = createZoomButton("zoom-in");
-    d->mZoomOutButton = createZoomButton("zoom-out");
-    d->mZoomInAction = 0;
-    d->mZoomOutAction = 0;
+    d->mZoomInButton = createZoomButton(QStringLiteral("zoom-in"));
+    d->mZoomOutButton = createZoomButton(QStringLiteral("zoom-out"));
+    d->mZoomInAction = nullptr;
+    d->mZoomOutAction = nullptr;
 
     d->mSlider = new QSlider;
     d->mSlider->setOrientation(Qt::Horizontal);
